@@ -121,7 +121,7 @@ class ForgotOtpScreen extends StatelessWidget {
                 RichText(
                   text: TextSpan(
                     text: 'Re-send code in ',
-                    style: GoogleFonts.andika(
+                    style: GoogleFonts.poppins(
                       color: Colors.grey,
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w400,

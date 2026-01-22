@@ -31,22 +31,36 @@ target 'Runner' do
   use_frameworks!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+  # Don't add ZegoExpressEngine here - it's already included via Flutter plugins
+
   target 'RunnerTests' do
     inherit! :search_paths
   end
 end
 
+# Add Broadcast Extension Target for Screen Sharing
+target 'ScreenShareExtension' do
+  use_frameworks!
+
+
+end
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-  # Start of the permission_handler configuration
-  target.build_configurations.each do |config|
-    config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
-      '$(inherited)',
-      'PERMISSION_CAMERA=1',
-      'PERMISSION_MICROPHONE=1',
-    ]
-  end
-  # End of the permission_handler configuration
+
+    # Start of the permission_handler configuration
+    target.build_configurations.each do |config|
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_CAMERA=1',
+        'PERMISSION_MICROPHONE=1',
+      ]
+
+      # Set minimum deployment target for all pods
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+    end
+    # End of the permission_handler configuration
   end
 end

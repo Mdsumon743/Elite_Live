@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:628281445808:android:0621532a9852d3251c9a75",
+        "mobilesdk_app_id": "1:628281445808:android:f8b8772c7a9edff51c9a75",
         "android_client_info": {
-          "package_name": "com.elitelive.mobile.app"
+          "package_name": "com.elitelive.morgan.mobileapp"
         }
       },
       "oauth_client": [
@@ -34,7 +34,7 @@
               "client_id": "628281445808-9sopig57tblhtf10f1hfiar6cvngnlfi.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.elitelive.mobile.app"
+                "bundle_id": "com.elitelive.morgan.mobileapp"
               }
             }
           ]

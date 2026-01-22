@@ -13,9 +13,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/services/screen_share_service.dart';
 import '../../../core/services/socket_service.dart';
 import '../data/create_live_response_data_model.dart';
 import 'package:zego_uikit_prebuilt_live_streaming/zego_uikit_prebuilt_live_streaming.dart';
+
+
 
 
 class LiveScreenController extends GetxController {
@@ -27,10 +30,57 @@ class LiveScreenController extends GetxController {
   var viewerCount = 0.obs;
   var isLoading = false.obs;
 
-  // NEW: Track co-hosts
+  // Track co-hosts
   var coHostIds = <String>[].obs;
 
   late ZegoUIKitPrebuiltLiveStreamingController prebuiltController;
+
+
+
+  /// Toggle screen sharing
+  Future<void> toggleScreenShare() async {
+    if (isScreenSharing.value) {
+      // Stop screen sharing
+      final success = await ScreenShareService.stopScreenShare();
+      if (success) {
+        isScreenSharing.value = false;
+        CustomSnackBar.success(
+          title: "Screen Share Stopped",
+          message: "You've stopped sharing your screen",
+        );
+      }
+    } else {
+      // Start screen sharing
+      final roomId = Get.arguments?['roomId'] ?? '';
+      final streamId = Get.arguments?['streamId'] ?? roomId;
+
+      if (roomId.isEmpty) {
+        CustomSnackBar.error(
+          title: "Error",
+          message: "Room ID not available",
+        );
+        return;
+      }
+
+      final success = await ScreenShareService.startScreenShare(
+        roomID: roomId,
+        streamID: streamId,
+      );
+
+      if (success) {
+        isScreenSharing.value = true;
+        CustomSnackBar.success(
+          title: "Screen Share Started",
+          message: "You're now sharing your screen",
+        );
+      } else {
+        CustomSnackBar.error(
+          title: "Failed",
+          message: "Could not start screen sharing",
+        );
+      }
+    }
+  }
 
   final NetworkCaller networkCaller = NetworkCaller();
   final SharedPreferencesHelper helper = SharedPreferencesHelper();
@@ -42,7 +92,7 @@ class LiveScreenController extends GetxController {
     super.onInit();
   }
 
-  /// NEW: Add co-host
+  /// Add co-host
   void addCoHost(String coHostId) {
     if (!coHostIds.contains(coHostId)) {
       coHostIds.add(coHostId);
@@ -50,18 +100,23 @@ class LiveScreenController extends GetxController {
     }
   }
 
-  /// NEW: Remove co-host
+  /// Remove co-host
   void removeCoHost(String coHostId) {
     coHostIds.remove(coHostId);
     log("❌ Co-host removed: $coHostId, Total co-hosts: ${coHostIds.length}");
   }
 
-  /// NEW: Check if there are co-hosts
+  /// Check if there are co-hosts
   bool hasCoHosts() {
     return coHostIds.isNotEmpty;
   }
 
-  /// Generate unique links for live streaming
+  /// Get first co-host ID
+  String? getFirstCoHostId() {
+    return coHostIds.isNotEmpty ? coHostIds.first : null;
+  }
+
+  /// Generate unique links
   String generateHostLink() {
     return 'host_${uuid.v4()}';
   }
@@ -74,11 +129,12 @@ class LiveScreenController extends GetxController {
     return 'audience_${uuid.v4()}';
   }
 
-  /// start Live
+  /// Start Live
   Future<void> startLive(String streamId) async {
     isLoading.value = true;
+    Get.dialog(CustomLoading(color: AppColors.primaryColor,), barrierDismissible: false);
     String? token = helper.getString("userToken");
-    log("the token during start live is $token");
+    log("Token during start live: $token");
 
     try {
       var response = await networkCaller.postRequest(
@@ -88,7 +144,7 @@ class LiveScreenController extends GetxController {
       );
 
       if (response.isSuccess) {
-        log("the api response is ${response.responseData}");
+        log("Start live API response: ${response.responseData}");
         CustomSnackBar.success(
           title: "Live Started",
           message: "Live session started successfully",
@@ -100,7 +156,7 @@ class LiveScreenController extends GetxController {
         );
       }
     } catch (e) {
-      log("the exception is ${e.toString()}");
+      log("Start live exception: ${e.toString()}");
       CustomSnackBar.error(
         title: "Error",
         message: "Failed to start live: ${e.toString()}",
@@ -110,10 +166,10 @@ class LiveScreenController extends GetxController {
     }
   }
 
-  /// start recording
+  /// Start recording
   Future<void> startRecording(String streamId) async {
     String? token = helper.getString("userToken");
-    log("the token during start recording: $token");
+    log("Token during start recording: $token");
 
     try {
       var response = await networkCaller.postRequest(
@@ -123,20 +179,20 @@ class LiveScreenController extends GetxController {
       );
 
       if (response.isSuccess) {
-        log("Start recording API response: ${response.responseData}");
+        log("✅ Start recording API response: ${response.responseData}");
       } else {
         throw Exception("Failed to start recording");
       }
     } catch (e) {
-      log("Start recording exception: ${e.toString()}");
+      log("❌ Start recording exception: ${e.toString()}");
       rethrow;
     }
   }
 
-  /// stop recording
+  /// Stop recording
   Future<void> stopRecording(String streamId) async {
     String? token = helper.getString("userToken");
-    log("the token during stop recording: $token");
+    log("Token during stop recording: $token");
 
     try {
       var response = await networkCaller.postRequest(
@@ -146,20 +202,20 @@ class LiveScreenController extends GetxController {
       );
 
       if (response.isSuccess) {
-        log("Stop recording API response: ${response.responseData}");
+        log("✅ Stop recording API response: ${response.responseData}");
       } else {
         throw Exception("Failed to stop recording");
       }
     } catch (e) {
-      log("Stop recording exception: ${e.toString()}");
+      log("❌ Stop recording exception: ${e.toString()}");
       rethrow;
     }
   }
 
-  /// Toggle recording with proper API calls
+  /// Toggle recording
   void toggleRecording(String streamId) async {
     if (isRecording.value) {
-      // === STOP RECORDING ===
+      // STOP RECORDING
       showMenu.value = false;
       isLoading.value = true;
 
@@ -185,7 +241,7 @@ class LiveScreenController extends GetxController {
         isLoading.value = false;
       }
     } else {
-      // === START RECORDING ===
+      // START RECORDING
       showMenu.value = false;
       isLoading.value = true;
 
@@ -213,14 +269,13 @@ class LiveScreenController extends GetxController {
     }
   }
 
-  /// Create Live Stream with generated links (ONLY for hosts)
+  /// Create Live Stream
   Future<Map<String, dynamic>?> createLive({
     required bool isPaid,
     double cost = 0.0,
   }) async {
     isLoading.value = true;
 
-    // Show loading spinner
     Get.dialog(
       Center(child: CustomLoading(color: AppColors.primaryColor)),
       barrierDismissible: false,
@@ -240,7 +295,6 @@ class LiveScreenController extends GetxController {
     }
 
     try {
-      // Host creates new session
       String hostLink = generateHostLink();
       String coHostLink = generateCoHostLink();
       String audienceLink = generateAudienceLink();
@@ -267,8 +321,6 @@ class LiveScreenController extends GetxController {
       }
 
       final json = response.responseData as Map<String, dynamic>;
-
-      // Parse LiveResult
       LiveResult result = LiveResult.fromJson(
         json.containsKey('result') ? json['result'] : json,
       );
@@ -290,7 +342,6 @@ class LiveScreenController extends GetxController {
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       CustomSnackBar.error(title: "Error", message: e.toString());
-
       return null;
     } finally {
       isLoading.value = false;
@@ -310,7 +361,6 @@ class LiveScreenController extends GetxController {
       return;
     }
 
-    // Create live stream
     Map<String, dynamic>? liveData = await createLive(
       isPaid: isPaid,
       cost: cost,
@@ -344,12 +394,11 @@ class LiveScreenController extends GetxController {
     }
   }
 
-  /// Join live session as audience using audience link
+  /// Join live as audience
   Future<void> joinLiveAsAudience({required String audienceLink}) async {
     log("=== joinLiveAsAudience called ===");
     log("Audience Link: $audienceLink");
 
-    // Parse the audience link
     String? liveId;
     String actualAudienceLink = audienceLink;
 
@@ -372,9 +421,7 @@ class LiveScreenController extends GetxController {
       return;
     }
 
-    // Get current user info
-    String? userId =
-        helper.getString('userId') ?? 'user_${uuid.v4().substring(0, 8)}';
+    String? userId = helper.getString('userId') ?? 'user_${uuid.v4().substring(0, 8)}';
     String? userName = helper.getString('userName') ?? 'Guest User';
 
     log("🚀 Joining live stream as audience...");
@@ -408,7 +455,7 @@ class LiveScreenController extends GetxController {
     }
   }
 
-  /// end Live
+  /// End Live
   Future<void> leaveLive(String streamId) async {
     isLoading.value = true;
     String? token = helper.getString('userToken');
@@ -419,10 +466,10 @@ class LiveScreenController extends GetxController {
         token: token,
       );
       if (response.isSuccess) {
-        log("the api response is ${response.responseData}");
+        log("✅ Leave live API response: ${response.responseData}");
       }
     } catch (e) {
-      log("the exception is ${e.toString()}");
+      log("❌ Leave live exception: ${e.toString()}");
     } finally {
       isLoading.value = false;
     }
@@ -435,10 +482,10 @@ class LiveScreenController extends GetxController {
   void toggleMic() {
     isMicOn.value = !isMicOn.value;
   }
-
+/*
   void toggleScreenShare() async {
     if (isScreenSharing.value) {
-      // === STOP SCREEN SHARING ===
+      // STOP SCREEN SHARING
       await ZegoUIKit.instance.stopSharingScreen();
       isScreenSharing.value = false;
       CustomSnackBar.success(
@@ -446,10 +493,9 @@ class LiveScreenController extends GetxController {
         message: "Your screen is no longer being shared",
       );
     } else {
+      // START SCREEN SHARING
       try {
         await ZegoUIKit.instance.startSharingScreen();
-
-        // If no exception, assume success
         isScreenSharing.value = true;
         CustomSnackBar.success(
           title: "Screen Sharing Started",
@@ -465,7 +511,7 @@ class LiveScreenController extends GetxController {
     }
 
     showMenu.value = false;
-  }
+  }*/
 
   void toggleMenu() {
     showMenu.value = !showMenu.value;
@@ -475,49 +521,33 @@ class LiveScreenController extends GetxController {
     showMenu.value = false;
   }
 
-  void addContributor() {
-    showMenu.value = false;
-    CustomSnackBar.success(
-      title: "Add Contributor",
-      message: "Opening contributor selection..",
-    );
-  }
-
-  void openComments() {
-    showMenu.value = false;
-  }
-
-  void openPolls() {
-    showMenu.value = false;
-  }
-
-  /// NEW: End call as HOST with co-host transfer option
+  /// NEW: End call as HOST with options
   void endCallAsHost(BuildContext context, String streamId) {
-    // Check if there are co-hosts
     if (hasCoHosts()) {
-      // Show dialog with option to transfer to co-host
       _showEndOrTransferDialog(context, streamId);
     } else {
-      // No co-hosts, just end normally
       _showSimpleEndDialog(context, streamId);
     }
   }
 
-  /// NEW: End call as CO-HOST (simpler, just ends session)
+  /// NEW: End call as CO-HOST
   void endCallAsCoHost(BuildContext context, String streamId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
           title: CustomTextView(
-            text: "End Session",
+            text: "Leave Session",
             fontSize: 18.sp,
             fontWeight: FontWeight.w600,
             color: AppColors.textHeader,
             textAlign: TextAlign.center,
           ),
           content: CustomTextView(
-            text: "Are you sure you want to end this live session?",
+            text: "Are you sure you want to leave this live session?",
             fontWeight: FontWeight.w400,
             fontSize: 14.sp,
             color: AppColors.textBody,
@@ -529,9 +559,7 @@ class LiveScreenController extends GetxController {
               children: [
                 Expanded(
                   child: CustomElevatedButton(
-                    ontap: () {
-                      Get.back();
-                    },
+                    ontap: () => Get.back(),
                     text: "Cancel",
                   ),
                 ),
@@ -539,19 +567,26 @@ class LiveScreenController extends GetxController {
                 Expanded(
                   child: CustomElevatedButton(
                     ontap: () async {
-                      Get.back(); // close dialog
+                      Get.back();
                       isLoading.value = true;
 
-                      await leaveLive(streamId);
+                      // Notify that co-host is leaving
+                      final String? currentUserId = helper.getString('userId');
+                      if (currentUserId != null) {
+                        final WebSocketClientService webSocketService = WebSocketClientService.to;
+                        webSocketService.notifyCoHostLeft(streamId, currentUserId);
+                      }
 
+                      await leaveLive(streamId);
                       isLoading.value = false;
-                      Get.back(); // navigate back from live screen
+                      Get.back();
+
                       CustomSnackBar.success(
-                        title: "Session Ended",
-                        message: "Live session ended successfully",
+                        title: "Left Session",
+                        message: "You have left the live session",
                       );
                     },
-                    text: "End",
+                    text: "Leave",
                   ),
                 ),
               ],
@@ -562,12 +597,15 @@ class LiveScreenController extends GetxController {
     );
   }
 
-  /// NEW: Dialog for host with co-host (End or Transfer)
+  /// Dialog for host with co-hosts
   void _showEndOrTransferDialog(BuildContext context, String streamId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
           title: CustomTextView(
             text: "End Session Options",
             fontSize: 18.sp,
@@ -587,16 +625,15 @@ class LiveScreenController extends GetxController {
               ),
               SizedBox(height: 20.h),
 
-              // Option 1: End Session for Everyone
+              // Option 1: End for everyone
               InkWell(
                 onTap: () async {
-                  Get.back(); // Close dialog
+                  Get.back();
                   isLoading.value = true;
-
                   await leaveLive(streamId);
-
                   isLoading.value = false;
-                  Get.back(); // Leave live screen
+                  Get.back();
+
                   CustomSnackBar.success(
                     title: "Session Ended",
                     message: "Live session ended for everyone",
@@ -605,7 +642,7 @@ class LiveScreenController extends GetxController {
                 child: Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(color: Colors.red, width: 1.5),
                   ),
@@ -639,18 +676,16 @@ class LiveScreenController extends GetxController {
 
               SizedBox(height: 12.h),
 
-              // Option 2: Leave and Transfer to Co-Host
+              // Option 2: Transfer to co-host
               InkWell(
                 onTap: () async {
-                  Get.back(); // Close dialog
+                  Get.back();
                   isLoading.value = true;
 
-                  // Transfer host to first co-host
                   if (coHostIds.isNotEmpty) {
                     String newHostId = coHostIds.first;
                     String? currentUserId = helper.getString('userId');
 
-                    // Notify via WebSocket
                     final WebSocketClientService webSocketService = WebSocketClientService.to;
                     webSocketService.notifyHostTransferred(
                       streamId,
@@ -662,7 +697,8 @@ class LiveScreenController extends GetxController {
                   }
 
                   isLoading.value = false;
-                  Get.back(); // Leave live screen
+                  Get.back();
+
                   CustomSnackBar.success(
                     title: "Host Transferred",
                     message: "You've left and transferred host role",
@@ -671,7 +707,7 @@ class LiveScreenController extends GetxController {
                 child: Container(
                   padding: EdgeInsets.all(16.w),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
+                    color: Colors.blue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12.r),
                     border: Border.all(color: Colors.blue, width: 1.5),
                   ),
@@ -706,10 +742,7 @@ class LiveScreenController extends GetxController {
           ),
           actions: [
             TextButton(
-
-              onPressed: () {
-                Get.back();
-              },
+              onPressed: () => Get.back(),
               child: CustomTextView(
                 text: "Cancel",
                 fontSize: 14.sp,
@@ -722,12 +755,15 @@ class LiveScreenController extends GetxController {
     );
   }
 
-  /// NEW: Simple end dialog (no co-hosts)
+  /// Simple end dialog (no co-hosts)
   void _showSimpleEndDialog(BuildContext context, String streamId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
           title: CustomTextView(
             text: "End Session",
             fontSize: 18.sp,
@@ -748,9 +784,7 @@ class LiveScreenController extends GetxController {
               children: [
                 Expanded(
                   child: CustomElevatedButton(
-                    ontap: () {
-                      Get.back();
-                    },
+                    ontap: () => Get.back(),
                     text: "Cancel",
                   ),
                 ),
@@ -758,13 +792,12 @@ class LiveScreenController extends GetxController {
                 Expanded(
                   child: CustomElevatedButton(
                     ontap: () async {
-                      Get.back(); // close dialog
+                      Get.back();
                       isLoading.value = true;
-
                       await leaveLive(streamId);
-
                       isLoading.value = false;
-                      Get.back(); // navigate back from live screen
+                      Get.back();
+
                       CustomSnackBar.success(
                         title: "Session Ended",
                         message: "Live session ended successfully",
@@ -781,12 +814,15 @@ class LiveScreenController extends GetxController {
     );
   }
 
-  /// Updated goBack to handle co-host leaving
+  /// Go back handler
   void goBack(BuildContext context, String streamId, bool isHost, bool isCoHost) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.r),
+          ),
           title: CustomTextView(
             text: isCoHost ? "Leave as Co-Host" : "Leave Live Session",
             fontSize: 18.sp,
@@ -808,9 +844,7 @@ class LiveScreenController extends GetxController {
               children: [
                 Expanded(
                   child: CustomElevatedButton(
-                    ontap: () {
-                      Get.back();
-                    },
+                    ontap: () => Get.back(),
                     text: "Cancel",
                   ),
                 ),
@@ -818,10 +852,17 @@ class LiveScreenController extends GetxController {
                 Expanded(
                   child: CustomElevatedButton(
                     ontap: () async {
-                      Get.back(); // close dialog
+                      Get.back();
 
-                      // If co-host, notify others
                       if (isCoHost) {
+                        String? currentUserId = helper.getString('userId');
+                        if (currentUserId != null) {
+                          final WebSocketClientService webSocketService = WebSocketClientService.to;
+                          webSocketService.notifyCoHostLeft(streamId, currentUserId);
+                        }
+                      }
+
+                      if (isHost) {
                         String? currentUserId = helper.getString('userId');
                         if (currentUserId != null) {
                           final WebSocketClientService webSocketService = WebSocketClientService.to;
@@ -832,8 +873,8 @@ class LiveScreenController extends GetxController {
                       isLoading.value = true;
                       await leaveLive(streamId);
                       isLoading.value = false;
+                      Get.back();
 
-                      Get.back(); // leave live screen
                       CustomSnackBar.warning(
                         title: "Left Session",
                         message: "You have left the live session",
@@ -850,55 +891,21 @@ class LiveScreenController extends GetxController {
     );
   }
 
-  /// ban user
-  Future<void> banUser(String streamId, String userId) async {
-    isLoading.value = true;
-    String? token = helper.getString("userToken");
-    log("Token during ban user: $token");
-
-    try {
-      var response = await networkCaller.postRequest(
-        AppUrls.banUser(streamId),
-        body: {"banUserId": userId},
-        token: token,
-      );
-
-      if (response.isSuccess) {
-        log("API response: ${response.responseData}");
-        CustomSnackBar.success(
-          title: "Success",
-          message: "The user has been successfully banned.",
-        );
-      } else {
-        log("API error response: ${response.responseData}");
-        CustomSnackBar.error(
-          title: "Failed",
-          message: response.errorMessage,
-        );
-      }
-    } catch (e) {
-      log("Exception: ${e.toString()}");
-      CustomSnackBar.error(title: "Error", message: e.toString());
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  /// update watch count
+  /// Update watch count
   Future<void> updateWatchCount(String streamId) async {
     isLoading.value = true;
     String? token = helper.getString("userToken");
-    log("the token during update watch count $token");
+    log("Token during update watch count: $token");
     try {
       var response = await networkCaller.patchRequest(
         AppUrls.updateWatchCount(streamId),
         token: token,
       );
       if (response.isSuccess) {
-        log("the api response is ${response.responseData}");
+        log("✅ Watch count updated: ${response.responseData}");
       }
     } catch (e) {
-      log("the exception is ${e.toString()}");
+      log("❌ Update watch count exception: ${e.toString()}");
     } finally {
       isLoading.value = false;
     }

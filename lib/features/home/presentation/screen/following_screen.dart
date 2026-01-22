@@ -84,6 +84,8 @@ class FollowingScreen extends StatelessWidget {
                   final firstName = recordeEvent.user.firstName;
                   final lastName = recordeEvent.user.lastName;
                   final userName = "$firstName $lastName";
+                  final userId = recordeEvent.userId ?? '';
+                  final isFollowing = recordeEvent.user.isFollow ?? false;
 
                   return Container(
                     margin: EdgeInsets.only(left: 14.w, right: 14.w, top: 8.h),
@@ -118,7 +120,7 @@ class FollowingScreen extends StatelessWidget {
                             SizedBox(width: 8.w),
 
                             /// follow button section
-                            FollowSection(index: index),
+                            FollowSection(userId: userId,isFollowing: isFollowing,),
                           ],
                         ),
 

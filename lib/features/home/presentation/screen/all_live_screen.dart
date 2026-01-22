@@ -2,7 +2,6 @@ import 'package:elites_live/core/global_widget/custom_loading.dart';
 import 'package:elites_live/core/global_widget/custom_text_view.dart';
 import 'package:elites_live/core/utils/constants/app_colors.dart';
 import 'package:elites_live/features/home/controller/home_controller.dart';
-
 import 'package:elites_live/features/home/presentation/widget/video_player_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -18,13 +17,12 @@ import 'package:get/get.dart';
 class AllLiveScreen extends StatelessWidget {
   AllLiveScreen({super.key});
 
-
   final HomeController controller = Get.find();
-
 
   @override
   Widget build(BuildContext context) {
-    Future.microtask(()=>controller.getAllRecordedLive(controller.currentPage.value, controller.limit.value));
+    Future.microtask(() => controller.getAllRecordedLive(
+        controller.currentPage.value, controller.limit.value));
     return Obx(() {
       /// -------------------------------
       /// 1. LOADING STATE
@@ -56,10 +54,9 @@ class AllLiveScreen extends StatelessWidget {
         );
       }
 
-
       /// -------------------------------
       /// 3. MAIN CONTENT
-
+      /// -------------------------------
       return SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,15 +70,15 @@ class AllLiveScreen extends StatelessWidget {
                 shrinkWrap: true,
                 physics: NeverScrollableScrollPhysics(),
                 itemBuilder: (context, index) {
-                  final recordeEvent = controller.allStreamList[index];
-                  ///need update Here is Live
+                  final recordedEvent = controller.allStreamList[index];
 
-                  final isLive = recordeEvent.stream!.isLive;
-
-
-                  final firstName = recordeEvent.user.firstName;
-                  final lastName = recordeEvent.user.lastName;
-                  final userName = "$firstName $lastName";
+                  // Extract data safely
+                  final isLive = recordedEvent.stream?.isLive ?? false;
+                  final firstName = recordedEvent.user.firstName ?? '';
+                  final lastName = recordedEvent.user.lastName ?? '';
+                  final userName = "$firstName $lastName".trim();
+                  final userId = recordedEvent.userId ?? '';
+                  final isFollowing = recordedEvent.user.isFollow ?? false;
 
                   return Container(
                     margin: EdgeInsets.only(left: 14.w, right: 14.w, top: 8.h),
@@ -92,7 +89,8 @@ class AllLiveScreen extends StatelessWidget {
                           children: [
                             /// Live indicator
                             LiveIndicatorSection(
-                              influencerProfile: "${recordeEvent.user.profileImage}",
+                              influencerProfile:
+                              "${recordedEvent.user.profileImage ?? ''}",
                               isLive: isLive,
                             ),
 
@@ -106,8 +104,11 @@ class AllLiveScreen extends StatelessWidget {
                                   NameBadgeSection(userName: userName),
                                   SizedBox(height: 4.h),
                                   DesignationSection(
-                                    timeAgo: formatScheduleDate(recordeEvent.scheduleDate??DateTime.now()),
-                                    designation: "${recordeEvent.user.profession}",
+                                    timeAgo: formatScheduleDate(
+                                        recordedEvent.scheduleDate ??
+                                            DateTime.now()),
+                                    designation:
+                                    "${recordedEvent.user.profession ?? 'N/A'}",
                                   ),
                                 ],
                               ),
@@ -115,23 +116,32 @@ class AllLiveScreen extends StatelessWidget {
 
                             SizedBox(width: 8.w),
 
-
-                            /// follow button section
-                            FollowSection(index: index),
+                            /// follow button section - FIXED: Pass userId and isFollowing
+                            FollowSection(
+                              userId: userId,
+                              isFollowing: isFollowing,
+                            ),
                           ],
                         ),
 
                         /// video
                         VideoPlayerSection(
-                          videoUrl: recordeEvent.recordedLink.toString(),
+                          videoUrl: recordedEvent.recordedLink?.toString() ?? '',
                         ),
 
                         /// like, comment, share
-                        VideoInteractionSection(eventId: recordeEvent.id,reactionCount: recordeEvent.count.eventLike.toString(),commentCount: recordeEvent.count.eventComment.toString(),),
+                        VideoInteractionSection(
+                          eventId: recordedEvent.id ?? '',
+                          reactionCount:
+                          recordedEvent.count?.eventLike?.toString() ?? '0',
+                          commentCount:
+                          recordedEvent.count?.eventComment?.toString() ?? '0',
+                        ),
                         SizedBox(height: 12.h),
 
                         /// description
-                        LiveDescriptionSection(description: recordeEvent.text),
+                        LiveDescriptionSection(
+                            description: recordedEvent.text ?? ''),
                       ],
                     ),
                   );
@@ -142,37 +152,43 @@ class AllLiveScreen extends StatelessWidget {
             SizedBox(height: 32.h),
 
             /// top influencer
-            CustomTextView(
-              text: "Top Influencer Live",
-              fontSize: 18.sp,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textHeader,
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 14.w),
+              child: CustomTextView(
+                text: "Top Influencer Live",
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textHeader,
+              ),
             ),
 
             SizedBox(height: 16.h),
 
-        SizedBox(
-          height: 260.h,
-          child: ListView.builder(
-            shrinkWrap: true,
-            scrollDirection: Axis.horizontal,
-            itemCount: controller.topInfluencerLiveList.length,
-            itemBuilder: (context, index) {
-              final topInfluencerLive = controller.topInfluencerLiveList[index];
+            SizedBox(
+              height: 260.h,
+              child: ListView.builder(
+                shrinkWrap: true,
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: 14.w),
+                itemCount: controller.topInfluencerLiveList.length,
+                itemBuilder: (context, index) {
+                  final topInfluencerLive =
+                  controller.topInfluencerLiveList[index];
 
-              final eventName = (topInfluencerLive.events.isNotEmpty)
-                  ? topInfluencerLive.events.first.title
-                  : "No Title";
+                  final eventName = (topInfluencerLive.events?.isNotEmpty ?? false)
+                      ? topInfluencerLive.events!.first.title ?? "No Title"
+                      : "No Title";
 
-              return TopInfluenceSection(
-                watchCount: topInfluencerLive.watchCount.toString(),
-                eventName: eventName,
-              );
-            },
-          ),
-        )
+                  return TopInfluenceSection(
+                    watchCount: topInfluencerLive.watchCount?.toString() ?? '0',
+                    eventName: eventName,
+                  );
+                },
+              ),
+            ),
 
-        ],
+            SizedBox(height: 32.h),
+          ],
         ),
       );
     });
@@ -204,12 +220,21 @@ class AllLiveScreen extends StatelessWidget {
     }
 
     List<String> months = [
-      "Jan","Feb","Mar","Apr","May","Jun",
-      "Jul","Aug","Sep","Oct","Nov","Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
     ];
 
     final suffix = daySuffix(date.day);
     return "${date.day}$suffix ${months[date.month - 1]} ${date.year}";
   }
-
 }

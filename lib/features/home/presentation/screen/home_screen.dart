@@ -7,7 +7,7 @@ import '../../controller/home_controller.dart';
 import '../widget/home_tab_bar.dart';
 import '../widget/top_header.dart';
 import 'all_live_screen.dart';
-import 'following_screen.dart';
+import 'following_screen.dart' hide AllLiveScreen;
 import 'live_screen.dart';
 
 class HomeScreen extends StatelessWidget {

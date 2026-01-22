@@ -48,7 +48,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAijNl4y_5YVJMCFLvs8xANJl_UoIqTg00',
-    appId: '1:628281445808:android:0621532a9852d3251c9a75',
+    appId: '1:628281445808:android:f8b8772c7a9edff51c9a75',
     messagingSenderId: '628281445808',
     projectId: 'elitelive-81772',
     storageBucket: 'elitelive-81772.firebasestorage.app',
@@ -56,13 +56,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBW79PG54mvvA6SxuSDz-fzXbn26xoBHWw',
-    appId: '1:628281445808:ios:7a7ad0cbdb35f82c1c9a75',
+    appId: '1:628281445808:ios:440d06bdac7a3ceb1c9a75',
     messagingSenderId: '628281445808',
     projectId: 'elitelive-81772',
     storageBucket: 'elitelive-81772.firebasestorage.app',
     androidClientId: '628281445808-6rcarfi8tvkngpfsh4eboioe2qm81mra.apps.googleusercontent.com',
-    iosClientId: '628281445808-9sopig57tblhtf10f1hfiar6cvngnlfi.apps.googleusercontent.com',
-    iosBundleId: 'com.elitelive.mobile.app',
+    iosClientId: '628281445808-gifqcjfa8advdrdch4jt9gsf9d7drkae.apps.googleusercontent.com',
+    iosBundleId: 'com.elitelive.morgan.mobileapp',
   );
 
   static const FirebaseOptions web = FirebaseOptions(

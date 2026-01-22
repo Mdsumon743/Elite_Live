@@ -215,6 +215,7 @@ class EventScheduleScreen extends StatelessWidget {
                         Get.toNamed(AppRoute.myLive, arguments: {
                           'roomId': streamId,
                           'eventId': eventId, // ← NEW: Pass event ID
+                          'streamId': streamId,
                           'userName': currentUserName,
                           'isHost': isOwner,
                           'hostLink': hostLink,

@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <dict>
+
+        <key>CADisableMinimumFrameDurationOnPhone</key>
+        <true/>
+
         <key>CFBundleDevelopmentRegion</key>
         <string>$(DEVELOPMENT_LANGUAGE)</string>
 
@@ -14,69 +18,21 @@
         <key>CFBundleIdentifier</key>
         <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 
-
-
-        <key>GIDClientID</key>
-        <string>628281445808-k25kto9ln6ge4f3vopoaulhsmsq7gtll.apps.googleusercontent.com</string>
-
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
 
-        <!-- Camera Permission -->
-        <key>NSCameraUsageDescription</key>
-        <string>We need camera access for live streaming</string>
+        <key>CFBundleName</key>
+        <string>elite_lives</string>
 
-        <!-- Microphone Permission -->
-        <key>NSMicrophoneUsageDescription</key>
-        <string>We need microphone access for live streaming</string>
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
 
-        <!-- Photo Library Permissions -->
-        <key>NSPhotoLibraryAddUsageDescription</key>
-        <string>We need access to save your recordings to the photo library</string>
-        <key>NSPhotoLibraryUsageDescription</key>
-        <string>We need access to view and save your recordings</string>
+        <key>CFBundleShortVersionString</key>
+        <string>$(FLUTTER_BUILD_NAME)</string>
 
-        <!-- Local Network Permission -->
-        <key>NSLocalNetworkUsageDescription</key>
-        <string>We need local network access for live streaming</string>
+        <key>CFBundleSignature</key>
+        <string>????</string>
 
-        <!-- Background Modes -->
-        <key>UIBackgroundModes</key>
-        <array>
-            <string>audio</string>
-            <string>voip</string>
-        </array>
-
-        <key>io.flutter.embedded_views_preview</key>
-        <true/>
-
-        <!-- App Transport Security -->
-        <key>NSAppTransportSecurity</key>
-        <dict>
-            <key>NSAllowsArbitraryLoads</key>
-            <true/>
-
-            <key>NSExceptionDomains</key>
-            <dict>
-                <key>stripe.com</key>
-                <dict>
-                    <key>NSExceptionAllowsInsecureHTTPLoads</key>
-                    <true/>
-                    <key>NSIncludesSubdomains</key>
-                    <true/>
-                </dict>
-                <key>checkout.stripe.com</key>
-                <dict>
-                    <key>NSExceptionAllowsInsecureHTTPLoads</key>
-                    <true/>
-                    <key>NSIncludesSubdomains</key>
-                    <true/>
-                </dict>
-            </dict>
-        </dict>
-
-        <!-- URL Schemes -->
-        <!-- URL Schemes -->
         <key>CFBundleURLTypes</key>
         <array>
             <dict>
@@ -91,29 +47,71 @@
             </dict>
         </array>
 
-        <key>CFBundleName</key>
-        <string>elite_lives</string>
-
-        <key>CFBundlePackageType</key>
-        <string>APPL</string>
-
-        <key>CFBundleShortVersionString</key>
-        <string>$(FLUTTER_BUILD_NAME)</string>
-
-        <key>CFBundleSignature</key>
-        <string>????</string>
-
         <key>CFBundleVersion</key>
         <string>$(FLUTTER_BUILD_NUMBER)</string>
 
+        <key>GIDClientID</key>
+        <string>628281445808-k25kto9ln6ge4f3vopoaulhsmsq7gtll.apps.googleusercontent.com</string>
+
         <key>LSRequiresIPhoneOS</key>
         <true/>
+
+        <key>NSAppTransportSecurity</key>
+        <dict>
+            <key>NSAllowsArbitraryLoads</key>
+            <true/>
+            <key>NSExceptionDomains</key>
+            <dict>
+                <key>checkout.stripe.com</key>
+                <dict>
+                    <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                    <true/>
+                    <key>NSIncludesSubdomains</key>
+                    <true/>
+                </dict>
+                <key>stripe.com</key>
+                <dict>
+                    <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                    <true/>
+                    <key>NSIncludesSubdomains</key>
+                    <true/>
+                </dict>
+            </dict>
+        </dict>
+
+        <key>NSCameraUsageDescription</key>
+        <string>We need camera access for live streaming</string>
+
+        <key>NSMicrophoneUsageDescription</key>
+        <string>We need microphone access for live streaming</string>
+
+        <key>NSLocalNetworkUsageDescription</key>
+        <string>We need local network access for live streaming</string>
+
+        <key>NSPhotoLibraryAddUsageDescription</key>
+        <string>We need access to save your recordings to the photo library</string>
+
+        <key>NSPhotoLibraryUsageDescription</key>
+        <string>We need access to view and save your recordings</string>
+
+        <key>UIApplicationSupportsIndirectInputEvents</key>
+        <true/>
+
+        <key>UIBackgroundModes</key>
+        <array>
+            <string>audio</string>
+            <string>voip</string>
+            <string>fetch</string>
+            <string>remote-notification</string>
+        </array>
 
         <key>UILaunchStoryboardName</key>
         <string>LaunchScreen</string>
 
         <key>UIMainStoryboardFile</key>
         <string>Main</string>
+        <key>FirebaseAppDelegateProxyEnabled</key>
+        <false/>
 
         <key>UISupportedInterfaceOrientations</key>
         <array>
@@ -130,10 +128,8 @@
             <string>UIInterfaceOrientationLandscapeRight</string>
         </array>
 
-        <key>CADisableMinimumFrameDurationOnPhone</key>
+        <key>io.flutter.embedded_views_preview</key>
         <true/>
 
-        <key>UIApplicationSupportsIndirectInputEvents</key>
-        <true/>
     </dict>
 </plist>

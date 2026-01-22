@@ -38,14 +38,16 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
   bool isWebSocketInitialized = false;
   bool showComments = false;
   bool isHost = true;
-  bool isCoHost = false; // NEW: Track co-host status
+  bool isCoHost = false;
+  String?streamId;
 
   @override
   void initState() {
     super.initState();
     _extractArguments();
     _setupContributionRequestListener();
-    _setupCoHostListeners(); // NEW
+    _setupCoHostListeners();
+    _setupHostLeftListener(); // NEW
   }
 
   void _extractArguments() {
@@ -54,13 +56,12 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
       eventId = data['eventId'];
       isFromEvent = eventId != null && eventId!.isNotEmpty;
       isHost = data['isHost'] ?? true;
-      isCoHost = data['isCoHost'] ?? false; // NEW: Check if user is co-host
+      isCoHost = data['isCoHost'] ?? false;
       log("📌 Is from event: $isFromEvent, Event ID: $eventId");
       log("📌 Is Host: $isHost, Is Co-Host: $isCoHost");
     }
   }
 
-  // Setup contribution request listener
   void _setupContributionRequestListener() {
     webSocketService.setOnContributionRequest((data) {
       log("🎯 Received contribution request in MyLiveScreen");
@@ -68,28 +69,73 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
     });
   }
 
-  // NEW: Setup co-host event listeners
   void _setupCoHostListeners() {
-    // Listen for co-host joined
     webSocketService.setOnCoHostJoined((data) {
       log("✅ Co-host joined event received");
       _handleCoHostJoined(data);
     });
 
-    // Listen for co-host left
     webSocketService.setOnCoHostLeft((data) {
       log("❌ Co-host left event received");
       _handleCoHostLeft(data);
     });
 
-    // Listen for host transferred
     webSocketService.setOnHostTransferred((data) {
       log("🔄 Host transferred event received");
       _handleHostTransferred(data);
     });
   }
 
-  // NEW: Handle co-host joined
+  /// NEW: Setup host left listener
+  void _setupHostLeftListener() {
+    webSocketService.setOnCoHostLeft((data) {
+      log("🚪 Host left event received");
+      _handleHostLeft(data);
+    });
+  }
+
+  /// NEW: Handle host left - auto-promote first co-host or end session
+  void _handleHostLeft(Map<String, dynamic> data) {
+    try {
+      final String streamId = data['streamId'] ?? '';
+      final String hostId = data['hostId'] ?? '';
+
+      if (streamId != roomId) return;
+
+      log("🚪 Host ($hostId) has left the stream");
+
+      // If current user is a co-host, check if they should become host
+      if (isCoHost && controller.coHostIds.isNotEmpty) {
+        final String? currentUserId = helper.getString('userId');
+
+        // If current user is the first co-host, promote them
+        if (currentUserId != null && controller.coHostIds.first == currentUserId) {
+          setState(() {
+            isHost = true;
+            isCoHost = false;
+          });
+
+          controller.removeCoHost(currentUserId);
+
+          CustomSnackBar.success(
+            title: "You're Now the Host",
+            message: "The host left and you've been promoted",
+          );
+
+          log("✅ Current user promoted to host");
+        }
+      } else if (!isHost && !isCoHost) {
+        // Regular audience: just show notification
+        CustomSnackBar.warning(
+          title: "Host Left",
+          message: "The host has left the session",
+        );
+      }
+    } catch (e) {
+      log("❌ Error handling host left: $e");
+    }
+  }
+
   void _handleCoHostJoined(Map<String, dynamic> data) {
     try {
       final String coHostId = data['coHostId'] ?? '';
@@ -109,7 +155,6 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
     }
   }
 
-  // NEW: Handle co-host left
   void _handleCoHostLeft(Map<String, dynamic> data) {
     try {
       final String coHostId = data['coHostId'] ?? '';
@@ -128,7 +173,6 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
     }
   }
 
-  // NEW: Handle host transferred
   void _handleHostTransferred(Map<String, dynamic> data) {
     try {
       final String newHostId = data['newHostId'] ?? '';
@@ -137,7 +181,6 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
       final String? currentUserId = helper.getString('userId');
 
       if (streamId == roomId && currentUserId == newHostId) {
-        // Current user became the host
         setState(() {
           isHost = true;
           isCoHost = false;
@@ -153,7 +196,6 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
     }
   }
 
-  // Handle incoming contribution requests
   void _handleContributionRequest(Map<String, dynamic> data) {
     try {
       final from = data['from'] as Map<String, dynamic>;
@@ -170,7 +212,6 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
       log("🔗 Co-Host Link: $coHostLink");
       log("📺 Stream ID: $streamId");
 
-      // Show the contribution request dialog
       ContributorRequestDialog.show(
         context,
         fromUserId: fromUserId,
@@ -234,9 +275,9 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
           _handleWebSocketMessage(message);
         });
 
-        // Setup listeners after connection
         _setupContributionRequestListener();
         _setupCoHostListeners();
+        _setupHostLeftListener();
       } else {
         log("❌ WebSocket connection timeout");
       }
@@ -264,7 +305,6 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
   }
 
   void _openAddContributorDialog() {
-    // Co-hosts cannot add contributors
     if (isCoHost) {
       CustomSnackBar.warning(
         title: "Not Allowed",
@@ -317,8 +357,15 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
   void dispose() {
     log("🔌 Cleaning up...");
 
-    // If co-host is leaving, notify others
     if (isCoHost && roomId != null) {
+      final String? currentUserId = helper.getString('userId');
+      if (currentUserId != null) {
+        webSocketService.notifyCoHostLeft(roomId!, currentUserId);
+      }
+    }
+
+    // NEW: If host is leaving, notify others
+    if (isHost && roomId != null) {
       final String? currentUserId = helper.getString('userId');
       if (currentUserId != null) {
         webSocketService.notifyCoHostLeft(roomId!, currentUserId);
@@ -339,6 +386,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
 
     liveId = data["liveId"] ?? data["roomId"] ?? "";
     roomId = data["roomId"] ?? liveId;
+    streamId = data['streamId'] ??liveId;
     eventId = data["eventId"];
     isFromEvent = eventId != null && eventId!.isNotEmpty;
     final String userName = data['userName'] ?? 'TestUser';
@@ -368,6 +416,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
     log("Live ID: $liveId");
     log("Room ID (DB): $roomId");
     log("Event ID: $eventId");
+    log("Stream Id is $streamId");
     log("Is From Event: $isFromEvent");
     log("Zego Room ID: $zegoRoomId");
     log("Is Host: $isHost");
@@ -387,6 +436,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
     return Scaffold(
       body: Stack(
         children: [
+          // Zego Live Streaming UI
           ZegoUIKitPrebuiltLiveStreaming(
             appID: 1071350787,
             appSign: "657d70a56532ec960b9fc671ff05d44b498910b5668a1b3f1f1241bede47af71",
@@ -469,6 +519,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
             ),
           ),
 
+          // Comments Section
           Positioned(
             bottom: 0,
             left: 0,
@@ -480,185 +531,198 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
               child: showComments
                   ? LiveCommentWidget(
                 eventId: eventId,
-                streamId: isFromEvent ? null : roomId,
+                streamId: "${isFromEvent ? null : streamId.toString()}",
+
                 isFromEvent: isFromEvent,
+                isHost: isHost,
+                isCoHost: isCoHost,
               )
                   : SizedBox.shrink(),
             ),
           ),
 
-          SafeArea(
-            child: Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.7),
-                        Colors.black.withValues(alpha: 0.3),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => controller.goBack(context, roomId!, isHost, isCoHost),
-                        child: Container(
-                          padding: EdgeInsets.all(8.w),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.arrow_back, color: Colors.white, size: 20.sp),
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(colors: [Colors.red, Colors.redAccent]),
-                                borderRadius: BorderRadius.circular(20.r),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 6.w,
-                                    height: 6.h,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  SizedBox(width: 6.w),
-                                  Text("LIVE", style: TextStyle(color: Colors.white, fontSize: 12.sp, fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                            ),
-                            SizedBox(width: 8.w),
+          // Top UI (Back button, Live badge, Viewer count, Menu)
+          _buildTopUI(),
 
-                            // NEW: Show co-host badge if user is co-host
-                            if (isCoHost) ...[
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(colors: [Colors.purple, Colors.deepPurple]),
-                                  borderRadius: BorderRadius.circular(20.r),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.co_present, color: Colors.white, size: 12.sp),
-                                    SizedBox(width: 4.w),
-                                    Text("CO-HOST", style: TextStyle(color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(width: 8.w),
-                            ],
-
-                            Obx(() => Container(
-                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.6),
-                                borderRadius: BorderRadius.circular(20.r),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.visibility, color: Colors.white, size: 14.sp),
-                                  SizedBox(width: 6.w),
-                                  Text("${controller.viewerCount.value}", style: TextStyle(color: Colors.white, fontSize: 12.sp)),
-                                ],
-                              ),
-                            )),
-                          ],
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => _showMenuOptions(context, isHost, isCoHost),
-                        child: Container(
-                          padding: EdgeInsets.all(8.w),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.more_vert, color: Colors.white, size: 20.sp),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                Spacer(),
-
-                if (!showComments)
-                  Padding(
-                    padding: EdgeInsets.only(right: 16.w, bottom: 100.h),
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            showComments = !showComments;
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(12.w),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.purple, Colors.deepPurple],
-                            ),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.purple.withValues(alpha: 0.4),
-                                blurRadius: 12,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: Icon(Icons.chat_bubble, color: Colors.white, size: 24.sp),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                if (showComments)
-                  Padding(
-                    padding: EdgeInsets.only(right: 16.w, bottom: 420.h),
-                    child: Align(
-                      alignment: Alignment.bottomRight,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            showComments = false;
-                          });
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(12.w),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withValues(alpha: 0.8),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.close, color: Colors.white, size: 20.sp),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+          // Comment Toggle Button
+          _buildCommentToggleButton(),
         ],
       ),
     );
   }
+
+  Widget _buildTopUI() {
+    return SafeArea(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.black.withValues(alpha: 0.7),
+              Colors.black.withValues(alpha: 0.3),
+              Colors.transparent,
+            ],
+          ),
+        ),
+        child: Row(
+          children: [
+            // Back Button
+            GestureDetector(
+              onTap: () => controller.goBack(context, roomId!, isHost, isCoHost),
+              child: Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.arrow_back, color: Colors.white, size: 20.sp),
+              ),
+            ),
+            SizedBox(width: 12.w),
+
+            // Live Badge, Co-Host Badge, Viewer Count
+            Expanded(
+              child: Row(
+                children: [
+                  // LIVE Badge
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [Colors.red, Colors.redAccent]),
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6.w,
+                          height: 6.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        SizedBox(width: 6.w),
+                        Text(
+                          "LIVE",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+
+                  // Co-Host Badge
+                  if (isCoHost) ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [Colors.purple, Colors.deepPurple]),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.co_present, color: Colors.white, size: 12.sp),
+                          SizedBox(width: 4.w),
+                          Text(
+                            "CO-HOST",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                  ],
+
+                  // Viewer Count
+                  Obx(() => Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(20.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.visibility, color: Colors.white, size: 14.sp),
+                        SizedBox(width: 6.w),
+                        Text(
+                          "${controller.viewerCount.value}",
+                          style: TextStyle(color: Colors.white, fontSize: 12.sp),
+                        ),
+                      ],
+                    ),
+                  )),
+                ],
+              ),
+            ),
+
+            // Menu Button
+            GestureDetector(
+              onTap: () => _showMenuOptions(context, isHost, isCoHost),
+              child: Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.more_vert, color: Colors.white, size: 20.sp),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommentToggleButton() {
+    return Positioned(
+      right: 16.w,
+      bottom: showComments ? 420.h : 100.h,
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            showComments = !showComments;
+          });
+        },
+        child: Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            gradient: showComments
+                ? LinearGradient(colors: [Colors.red, Colors.redAccent])
+                : LinearGradient(colors: [Colors.purple, Colors.deepPurple]),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: (showComments ? Colors.red : Colors.purple).withValues(alpha: 0.4),
+                blurRadius: 12,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Icon(
+            showComments ? Icons.close : Icons.chat_bubble,
+            color: Colors.white,
+            size: 24.sp,
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
+  // Add this method to _MyLiveScreenState class
 
   void _showMenuOptions(BuildContext context, bool isHost, bool isCoHost) {
     final Map<String, dynamic>? data = Get.arguments;
@@ -679,7 +743,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              /// Drag bar
+              // Drag bar
               Container(
                 width: 40.w,
                 height: 4.h,
@@ -690,7 +754,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
               ),
               SizedBox(height: 20.h),
 
-              /// Title
+              // Title
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Row(
@@ -708,7 +772,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
               ),
               SizedBox(height: 20.h),
 
-              /// Link Boxes for HOST only
+              // Link Boxes (ONLY for HOST)
               if (isHost)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -725,23 +789,24 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
                   ),
                 ),
 
-              /// OPTIONS FOR HOST AND CO-HOST
+              // OPTIONS FOR HOST AND CO-HOST
               if (isHost || isCoHost) ...[
-                // Screen Share (available for both host and co-host)
-                _buildMenuOption(
+                // Screen Share
+                // Screen Share
+                Obx(() => _buildMenuOption(
                   icon: Icons.screen_share,
                   title: "Screen Share",
                   subtitle: controller.isScreenSharing.value
                       ? "Stop sharing screen"
                       : "Share your screen",
-                  color: Colors.blue,
+                  color: controller.isScreenSharing.value ? Colors.red : Colors.blue,
                   onTap: () {
                     Get.back();
                     controller.toggleScreenShare();
                   },
-                ),
+                )),
 
-                // Recording (available for both host and co-host)
+                // Recording
                 _buildMenuOption(
                   icon: Icons.fiber_manual_record,
                   title: "Recording",
@@ -755,7 +820,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
                   },
                 ),
 
-                // Add Contributor (ONLY for host, not co-host)
+                // Add Contributor (ONLY for host)
                 if (isHost)
                   _buildMenuOption(
                     icon: Icons.person_add,
@@ -769,27 +834,27 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
                   ),
               ],
 
-              /// Create Poll (available for all)
+              // Create Poll (available for all)
               _buildMenuOption(
                 icon: Icons.poll,
                 title: "Create Poll",
                 subtitle: "Engage with audience",
                 color: Colors.orange,
                 onTap: () {
-                  log("the button is pressed");
+                  log("Create poll button pressed");
                   Get.back();
                   CreatePollDialog.show(context, streamId: liveId!);
                 },
               ),
 
-              /// End Live (host and co-host, but different logic for host)
+              // End/Leave Session
               if (isHost || isCoHost)
                 _buildMenuOption(
                   icon: Icons.call_end,
-                  title: isCoHost ? "End Live" : "End Live",
-                  subtitle: isCoHost
-                      ? "Stop live streaming"
-                      : "Stop live streaming or transfer host",
+                  title: isHost ? "End Session" : "Leave Session",
+                  subtitle: isHost
+                      ? "End for all or transfer host"
+                      : "Leave the live session",
                   color: Colors.red[700]!,
                   onTap: () {
                     Get.back();
@@ -810,7 +875,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
     );
   }
 
-  /// LINK BOX UI
+  /// Link Box UI
   Widget _buildLinkBox({required String title, required String value}) {
     String displayValue = value;
 
@@ -864,7 +929,7 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
     );
   }
 
-  /// MENU OPTION UI
+  /// Menu Option UI
   Widget _buildMenuOption({
     required IconData icon,
     required String title,
@@ -915,5 +980,8 @@ class _MyLiveScreenState extends State<MyLiveScreen> {
       ),
     );
   }
+
+  /// LINK BOX UI
+
 }
 

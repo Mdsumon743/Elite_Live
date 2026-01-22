@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:elites_live/core/global_widget/custom_snackbar.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -20,6 +21,7 @@ class SignInController extends GetxController {
   RxBool isLoading = false.obs;
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  String fcmToken = "";
 
   @override
   Future<void> onInit() async {
@@ -28,12 +30,19 @@ class SignInController extends GetxController {
   }
 
   Future<void> signIn() async {
-    String? token = preferencesHelper.getString("fcm_token") ?? "";
+    String? token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      fcmToken = token; // ✅ Assign it here
+      log("FCM Token: $token");
+    } else {
+      log("❌ Failed to get FCM token.");
+    }
     Map<String, dynamic> registration = {
       "email": emailController.text,
       "password": passwordController.text,
       "fcmToken": token,
     };
+    log("the fcm token is $token");
 
     try {
       isLoading.value = true;

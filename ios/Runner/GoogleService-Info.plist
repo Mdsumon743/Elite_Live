@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>628281445808-9sopig57tblhtf10f1hfiar6cvngnlfi.apps.googleusercontent.com</string>
+	<string>628281445808-gifqcjfa8advdrdch4jt9gsf9d7drkae.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.628281445808-9sopig57tblhtf10f1hfiar6cvngnlfi</string>
+	<string>com.googleusercontent.apps.628281445808-gifqcjfa8advdrdch4jt9gsf9d7drkae</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>628281445808-6rcarfi8tvkngpfsh4eboioe2qm81mra.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.elitelive.mobile.app</string>
+	<string>com.elitelive.morgan.mobileapp</string>
 	<key>PROJECT_ID</key>
 	<string>elitelive-81772</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:628281445808:ios:7a7ad0cbdb35f82c1c9a75</string>
+	<string>1:628281445808:ios:440d06bdac7a3ceb1c9a75</string>
 </dict>
 </plist>

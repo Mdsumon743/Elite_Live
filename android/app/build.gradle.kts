@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.elitelive.mobile.app"
+    namespace = "com.elitelive.morgan.mobileapp"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -26,7 +26,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.elitelive.mobile.app"
+        applicationId = "com.elitelive.morgan.mobileapp"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24

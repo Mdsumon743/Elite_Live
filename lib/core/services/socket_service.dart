@@ -3,289 +3,13 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
-
-
-
-
-
-
-/*class WebSocketClientService extends GetxService {
-  final RxBool isConnected = false.obs;
-  final RxBool isConnecting = false.obs;
-
-  WebSocket? _socket;
-  Timer? _reconnectTimer;
-  Timer? _pingTimer;
-  String? _socketUrl;
-  String? _authToken;
-  bool _isReconnecting = false;
-  bool _isManualDisconnect = false;
-  int _reconnectAttempts = 0;
-  static const int _maxReconnectAttempts = 5;
-  static const int _connectionTimeout = 10; // seconds
-
-  Function(String)? onMessageRecived;
-  Function(Map<String, dynamic>)? onContributionRequest;
-  Function(Map<String, dynamic>)? onCoHostJoined;
-  Function(Map<String, dynamic>)? onCoHostLeft;
-  Function(Map<String, dynamic>)? onHostTransferred;
-
-  static WebSocketClientService get to => Get.find();
-
-  Future<void> connect(String socketUrl, String authToken) async {
-    // Prevent multiple simultaneous connection attempts
-    if (isConnecting.value) {
-      log("⚠️ Connection already in progress");
-      return;
-    }
-
-    _socketUrl = socketUrl;
-    _authToken = authToken;
-    _isManualDisconnect = false;
-    isConnecting.value = true;
-
-    try {
-      // Close existing connection
-      await _socket?.close();
-      _reconnectTimer?.cancel();
-      _pingTimer?.cancel();
-
-      log("🔌 Connecting to $socketUrl");
-
-      // Create connection with timeout
-      _socket = await WebSocket.connect(
-        socketUrl,
-        headers: {'x-token': authToken},
-      ).timeout(
-        Duration(seconds: _connectionTimeout),
-        onTimeout: () {
-          throw TimeoutException('Connection timeout after $_connectionTimeout seconds');
-        },
-      );
-
-      log("✅ WebSocket connected successfully");
-      isConnected.value = true;
-      isConnecting.value = false;
-      _reconnectAttempts = 0; // Reset reconnect attempts on successful connection
-
-      // Start ping timer to keep connection alive
-      _startPingTimer();
-
-      // Listen to socket events
-      _socket?.listen(
-            (message) {
-          log("📨 Received: $message");
-          _handleIncomingMessage(message);
-          onMessageRecived?.call(message);
-        },
-        onDone: () {
-          isConnected.value = false;
-          isConnecting.value = false;
-          log("🔌 Socket closed");
-          _pingTimer?.cancel();
-          if (!_isManualDisconnect) _handleDisconnect();
-        },
-        onError: (e) {
-          isConnected.value = false;
-          isConnecting.value = false;
-          log("❌ Socket error: $e");
-          _pingTimer?.cancel();
-          if (!_isManualDisconnect) _handleDisconnect();
-        },
-        cancelOnError: false,
-      );
-    } catch (e) {
-      isConnected.value = false;
-      isConnecting.value = false;
-      log("❌ Connection error: $e");
-
-      if (!_isManualDisconnect) {
-        _handleDisconnect();
-      }
-
-      rethrow;
-    }
-  }
-
-  // Handle incoming WebSocket messages with all event types
-  void _handleIncomingMessage(String message) {
-    try {
-      final decoded = jsonDecode(message);
-      final messageType = decoded['type'];
-
-      log("🎯 Processing message type: $messageType");
-
-      switch (messageType) {
-        case 'contribution-request':
-          log("🎯 Received contribution request");
-          onContributionRequest?.call(decoded);
-          break;
-
-        case 'cohost-joined':
-          log("✅ Co-host joined notification");
-          onCoHostJoined?.call(decoded);
-          break;
-
-        case 'cohost-left':
-          log("❌ Co-host left notification");
-          onCoHostLeft?.call(decoded);
-          break;
-
-        case 'host-transferred':
-          log("🔄 Host transferred notification");
-          onHostTransferred?.call(decoded);
-          break;
-
-        case 'accept-contribution':
-          log("✅ Contribution accepted");
-          // Handle contribution acceptance
-          break;
-
-        case 'reject-contribution':
-          log("❌ Contribution rejected");
-          // Handle contribution rejection
-          break;
-
-        case 'pong':
-          log("🏓 Pong received");
-          break;
-
-        default:
-          log("📨 Unknown message type: $messageType");
-      }
-    } catch (e) {
-      log("❌ Error processing incoming message: $e");
-    }
-  }
-
-  void _startPingTimer() {
-    _pingTimer?.cancel();
-    _pingTimer = Timer.periodic(Duration(seconds: 30), (timer) {
-      if (isConnected.value) {
-        try {
-          sendMessage({'type': 'ping'});
-        } catch (e) {
-          log("❌ Ping failed: $e");
-        }
-      } else {
-        timer.cancel();
-      }
-    });
-  }
-
-  void _handleDisconnect() {
-    if (_isReconnecting) return;
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
-      log("❌ Max reconnection attempts reached");
-      return;
-    }
-
-    _isReconnecting = true;
-    _reconnectAttempts++;
-
-    final delay = Duration(seconds: math.min(math.pow(2, _reconnectAttempts).toInt(), 30));
-    log("🔄 Reconnecting in ${delay.inSeconds}s (attempt $_reconnectAttempts/$_maxReconnectAttempts)...");
-
-    _reconnectTimer = Timer(delay, () {
-      _isReconnecting = false;
-      if (_socketUrl != null &&
-          _authToken != null &&
-          !_isManualDisconnect) {
-        connect(_socketUrl!, _authToken!).catchError((e) {
-          log("❌ Reconnection failed: $e");
-        });
-      }
-    });
-  }
-
-  void sendMessage(Map<String, dynamic> message) {
-    if (!isConnected.value) {
-      log("❌ Cannot send: WebSocket not connected");
-      throw WebSocketException("WebSocket is not connected");
-    }
-
-    try {
-      final jsonMessage = jsonEncode(message);
-      _socket?.add(jsonMessage);
-      log("📤 Sent: $jsonMessage");
-    } catch (e) {
-      log("❌ Send error: $e");
-      rethrow;
-    }
-  }
-
-  void disconnect() {
-    _isManualDisconnect = true;
-    _reconnectAttempts = 0;
-    _reconnectTimer?.cancel();
-    _pingTimer?.cancel();
-    _socket?.close();
-    _socket = null;
-    isConnected.value = false;
-    isConnecting.value = false;
-    log("🔌 Disconnected manually");
-  }
-
-  void setOnMessageReceived(Function(String) callback) {
-    onMessageRecived = callback;
-  }
-
-  void setOnContributionRequest(Function(Map<String, dynamic>) callback) {
-    onContributionRequest = callback;
-  }
-
-  void setOnCoHostJoined(Function(Map<String, dynamic>) callback) {
-    onCoHostJoined = callback;
-  }
-
-  void setOnCoHostLeft(Function(Map<String, dynamic>) callback) {
-    onCoHostLeft = callback;
-  }
-
-  void setOnHostTransferred(Function(Map<String, dynamic>) callback) {
-    onHostTransferred = callback;
-  }
-
-  /// Notify co-host joined
-  void notifyCoHostJoined(String streamId, String coHostId, String coHostName) {
-    sendMessage({
-      "type": "cohost-joined",
-      "streamId": streamId,
-      "coHostId": coHostId,
-      "coHostName": coHostName,
-    });
-  }
-
-  /// Notify co-host left
-  void notifyCoHostLeft(String streamId, String coHostId) {
-    sendMessage({
-      "type": "cohost-left",
-      "streamId": streamId,
-      "coHostId": coHostId,
-    });
-  }
-
-  /// Notify host transferred
-  void notifyHostTransferred(String streamId, String oldHostId, String newHostId) {
-    sendMessage({
-      "type": "host-transferred",
-      "streamId": streamId,
-      "oldHostId": oldHostId,
-      "newHostId": newHostId,
-    });
-  }
-
-  @override
-  void onClose() {
-    disconnect();
-    super.onClose();
-  }
-}*/
 class WebSocketClientService extends GetxService {
   final RxBool isConnected = false.obs;
   final RxBool isConnecting = false.obs;
+  final RxString connectionError = ''.obs;
 
   WebSocket? _socket;
   Timer? _reconnectTimer;
@@ -296,21 +20,20 @@ class WebSocketClientService extends GetxService {
   bool _isManualDisconnect = false;
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 5;
-  static const int _connectionTimeout = 10; // seconds
+  static const int _connectionTimeout = 15; // seconds
 
   Function(String)? onMessageRecived;
   Function(Map<String, dynamic>)? onContributionRequest;
   Function(Map<String, dynamic>)? onCoHostJoined;
   Function(Map<String, dynamic>)? onCoHostLeft;
   Function(Map<String, dynamic>)? onHostTransferred;
-  // NEW: Bad word warning and ban handlers
+  Function(Map<String, dynamic>)? onHostLeft;
   Function(Map<String, dynamic>)? onBadWordWarning;
   Function(Map<String, dynamic>)? onUserBanned;
 
   static WebSocketClientService get to => Get.find();
 
   Future<void> connect(String socketUrl, String authToken) async {
-    // Prevent multiple simultaneous connection attempts
     if (isConnecting.value) {
       log("⚠️ Connection already in progress");
       return;
@@ -320,61 +43,127 @@ class WebSocketClientService extends GetxService {
     _authToken = authToken;
     _isManualDisconnect = false;
     isConnecting.value = true;
+    connectionError.value = '';
 
     try {
-      // Close existing connection
       await _socket?.close();
       _reconnectTimer?.cancel();
       _pingTimer?.cancel();
 
       log("🔌 Connecting to $socketUrl");
+      log("🔑 Auth token: ${authToken.substring(0, 20)}...");
 
-      // Create connection with timeout
-      _socket = await WebSocket.connect(
-        socketUrl,
-        headers: {'x-token': authToken},
-      ).timeout(
-        Duration(seconds: _connectionTimeout),
-        onTimeout: () {
-          throw TimeoutException('Connection timeout after $_connectionTimeout seconds');
-        },
-      );
+      // Validate URL format
+      final uri = Uri.parse(socketUrl);
+      if (!uri.scheme.startsWith('ws')) {
+        throw Exception('Invalid WebSocket URL scheme: ${uri.scheme}');
+      }
 
-      log("✅ WebSocket connected successfully");
-      isConnected.value = true;
-      isConnecting.value = false;
-      _reconnectAttempts = 0; // Reset reconnect attempts on successful connection
+      // Create HttpClient with SSL bypass for development
+      final httpClient = HttpClient();
 
-      // Start ping timer to keep connection alive
-      _startPingTimer();
+      if (kDebugMode) {
+        httpClient.badCertificateCallback = (cert, host, port) {
+          log("⚠️ Bypassing SSL verification for $host:$port (DEBUG MODE)");
+          return true;
+        };
+      }
 
-      // Listen to socket events
-      _socket?.listen(
-            (message) {
-          log("📨 Received: $message");
-          _handleIncomingMessage(message);
-          onMessageRecived?.call(message);
-        },
-        onDone: () {
-          isConnected.value = false;
-          isConnecting.value = false;
-          log("🔌 Socket closed");
-          _pingTimer?.cancel();
-          if (!_isManualDisconnect) _handleDisconnect();
-        },
-        onError: (e) {
-          isConnected.value = false;
-          isConnecting.value = false;
-          log("❌ Socket error: $e");
-          _pingTimer?.cancel();
-          if (!_isManualDisconnect) _handleDisconnect();
-        },
-        cancelOnError: false,
-      );
+      // Set connection timeout
+      httpClient.connectionTimeout = Duration(seconds: _connectionTimeout);
+
+      try {
+        // Attempt WebSocket connection
+        _socket = await WebSocket.connect(
+          socketUrl,
+          headers: {
+            'x-token': authToken,
+            'Connection': 'Upgrade',
+            'Upgrade': 'websocket',
+          },
+          customClient: httpClient,
+        ).timeout(
+          Duration(seconds: _connectionTimeout),
+          onTimeout: () {
+            throw TimeoutException(
+                'Connection timeout after $_connectionTimeout seconds. Server may be down or unreachable.'
+            );
+          },
+        );
+
+        log("✅ WebSocket connected successfully");
+        isConnected.value = true;
+        isConnecting.value = false;
+        connectionError.value = '';
+        _reconnectAttempts = 0;
+
+        _startPingTimer();
+
+        _socket?.listen(
+              (message) {
+            log("📨 Received: $message");
+            _handleIncomingMessage(message);
+            onMessageRecived?.call(message);
+          },
+          onDone: () {
+            isConnected.value = false;
+            isConnecting.value = false;
+            log("🔌 Socket closed");
+            _pingTimer?.cancel();
+            if (!_isManualDisconnect) _handleDisconnect();
+          },
+          onError: (e) {
+            isConnected.value = false;
+            isConnecting.value = false;
+            log("❌ Socket error: $e");
+            connectionError.value = e.toString();
+            _pingTimer?.cancel();
+            if (!_isManualDisconnect) _handleDisconnect();
+          },
+          cancelOnError: false,
+        );
+      } on WebSocketException catch (e) {
+        log("❌ WebSocket Exception: $e");
+
+        // Parse error message for better diagnostics
+        if (e.message.contains('502')) {
+          connectionError.value = 'Server unavailable (502). The WebSocket server may be down or not properly configured.';
+          log("💡 Tip: Check if the WebSocket server is running at $socketUrl");
+          log("💡 Tip: Verify the server supports WebSocket upgrade protocol");
+          log("💡 Tip: Check if there's a reverse proxy (nginx/apache) blocking WebSocket connections");
+        } else if (e.message.contains('401')) {
+          connectionError.value = 'Authentication failed (401). Invalid or expired token.';
+          log("💡 Tip: Verify the x-token header is correct");
+        } else if (e.message.contains('403')) {
+          connectionError.value = 'Access forbidden (403). Token may not have required permissions.';
+        } else if (e.message.contains('404')) {
+          connectionError.value = 'WebSocket endpoint not found (404). Check the URL path.';
+          log("💡 Tip: Verify the WebSocket endpoint path on the server");
+        } else {
+          connectionError.value = 'WebSocket connection failed: ${e.message}';
+        }
+
+        rethrow;
+      } on SocketException catch (e) {
+        log("❌ Socket Exception: $e");
+        connectionError.value = 'Network error. Check your internet connection.';
+        log("💡 Tip: Verify internet connectivity");
+        log("💡 Tip: Check if the server hostname resolves: $uri");
+        rethrow;
+      } on TimeoutException catch (e) {
+        log("❌ Timeout Exception: $e");
+        connectionError.value = 'Connection timeout. Server not responding.';
+        log("💡 Tip: Server may be offline or unreachable");
+        rethrow;
+      }
     } catch (e) {
       isConnected.value = false;
       isConnecting.value = false;
       log("❌ Connection error: $e");
+
+      if (connectionError.value.isEmpty) {
+        connectionError.value = e.toString();
+      }
 
       if (!_isManualDisconnect) {
         _handleDisconnect();
@@ -384,7 +173,6 @@ class WebSocketClientService extends GetxService {
     }
   }
 
-  // Handle incoming WebSocket messages with all event types
   void _handleIncomingMessage(String message) {
     try {
       final decoded = jsonDecode(message);
@@ -415,12 +203,10 @@ class WebSocketClientService extends GetxService {
 
         case 'accept-contribution':
           log("✅ Contribution accepted");
-          // Handle contribution acceptance
           break;
 
         case 'reject-contribution':
           log("❌ Contribution rejected");
-          // Handle contribution rejection
           break;
 
         case 'bad-word-warning':
@@ -439,7 +225,6 @@ class WebSocketClientService extends GetxService {
 
         case 'error':
           log("❌ Server error: ${decoded['message']}");
-          // Handle generic errors
           break;
 
         default:
@@ -469,6 +254,7 @@ class WebSocketClientService extends GetxService {
     if (_isReconnecting) return;
     if (_reconnectAttempts >= _maxReconnectAttempts) {
       log("❌ Max reconnection attempts reached");
+      log("💡 Please check server status and try again manually");
       return;
     }
 
@@ -480,9 +266,7 @@ class WebSocketClientService extends GetxService {
 
     _reconnectTimer = Timer(delay, () {
       _isReconnecting = false;
-      if (_socketUrl != null &&
-          _authToken != null &&
-          !_isManualDisconnect) {
+      if (_socketUrl != null && _authToken != null && !_isManualDisconnect) {
         connect(_socketUrl!, _authToken!).catchError((e) {
           log("❌ Reconnection failed: $e");
         });
@@ -515,7 +299,15 @@ class WebSocketClientService extends GetxService {
     _socket = null;
     isConnected.value = false;
     isConnecting.value = false;
+    connectionError.value = '';
     log("🔌 Disconnected manually");
+  }
+
+  // Reset connection state for manual retry
+  void resetConnectionState() {
+    _reconnectAttempts = 0;
+    connectionError.value = '';
+    log("🔄 Connection state reset");
   }
 
   void setOnMessageReceived(Function(String) callback) {
@@ -538,17 +330,14 @@ class WebSocketClientService extends GetxService {
     onHostTransferred = callback;
   }
 
-  // NEW: Set bad word warning callback
   void setOnBadWordWarning(Function(Map<String, dynamic>) callback) {
     onBadWordWarning = callback;
   }
 
-  // NEW: Set banned callback
   void setOnUserBanned(Function(Map<String, dynamic>) callback) {
     onUserBanned = callback;
   }
 
-  /// Notify co-host joined
   void notifyCoHostJoined(String streamId, String coHostId, String coHostName) {
     sendMessage({
       "type": "cohost-joined",
@@ -558,7 +347,6 @@ class WebSocketClientService extends GetxService {
     });
   }
 
-  /// Notify co-host left
   void notifyCoHostLeft(String streamId, String coHostId) {
     sendMessage({
       "type": "cohost-left",
@@ -567,7 +355,6 @@ class WebSocketClientService extends GetxService {
     });
   }
 
-  /// Notify host transferred
   void notifyHostTransferred(String streamId, String oldHostId, String newHostId) {
     sendMessage({
       "type": "host-transferred",

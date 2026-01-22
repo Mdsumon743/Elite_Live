@@ -20,7 +20,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await AuthService().init();
-  await PushNotificationService.initialize();
+  await PushNotificationService().initialize();
   AppBinding().dependencies();
   Get.put(GlobalWebSocketHandler());
   Get.put(WebSocketClientService(), permanent: true);
