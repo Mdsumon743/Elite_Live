@@ -1,11 +1,3 @@
-// To parse this JSON data, do
-//
-//     final userInformation = userInformationFromJson(jsonString);
-
-// To parse this JSON data, do
-//
-//     final userInformation = userInformationFromJson(jsonString);
-
 import 'dart:convert';
 
 UserInformation userInformationFromJson(String str) => UserInformation.fromJson(json.decode(str));
@@ -40,25 +32,33 @@ class UserResult {
   String id;
   String firstName;
   String lastName;
-  dynamic profileImage;
+  String? profileImage; // nullable
   String email;
   String profession;
   String address;
   String gender;
   DateTime dob;
   String bio;
+  Count count;
+  String stripeAccountId;
+  int followingCount;
+  int followersCount;
 
   UserResult({
     required this.id,
     required this.firstName,
     required this.lastName,
-    required this.profileImage,
+    this.profileImage,
     required this.email,
     required this.profession,
     required this.address,
     required this.gender,
     required this.dob,
     required this.bio,
+    required this.count,
+    required this.stripeAccountId,
+    required this.followingCount,
+    required this.followersCount,
   });
 
   factory UserResult.fromJson(Map<String, dynamic> json) => UserResult(
@@ -72,6 +72,10 @@ class UserResult {
     gender: json["gender"],
     dob: DateTime.parse(json["dob"]),
     bio: json["bio"],
+    count: Count.fromJson(json["_count"] ?? {}),
+    stripeAccountId: json['stripeAccountId']??'',
+    followingCount: json["followingCount"] ?? 0,
+    followersCount: json["followersCount"] ?? 0,
   );
 
   Map<String, dynamic> toJson() => {
@@ -85,6 +89,24 @@ class UserResult {
     "gender": gender,
     "dob": dob.toIso8601String(),
     "bio": bio,
+    "_count": count.toJson(),
+    "stripeAccountId": stripeAccountId,
+    "followingCount": followingCount,
+    "followersCount": followersCount,
   };
 }
 
+/// For _count field
+class Count {
+  int event;
+
+  Count({required this.event});
+
+  factory Count.fromJson(Map<String, dynamic> json) => Count(
+    event: json["Event"] ?? 0,
+  );
+
+  Map<String, dynamic> toJson() => {
+    "Event": event,
+  };
+}

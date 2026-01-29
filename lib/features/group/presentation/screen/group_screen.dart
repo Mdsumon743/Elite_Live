@@ -1,7 +1,7 @@
 
 import 'package:elites_live/core/global_widget/custom_text_field.dart';
 import 'package:elites_live/core/global_widget/custom_text_view.dart';
-import 'package:elites_live/features/group/controller/group_controller.dart';
+import 'package:elites_live/features/group/controller/my_group_controller.dart';
 import 'package:elites_live/routes/app_routing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -15,7 +15,7 @@ import '../widget/group_section.dart';
 class GroupScreen extends StatelessWidget {
   GroupScreen({super.key});
 
-  final GroupController controller = Get.find();
+  final MyGroupController controller = Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +71,12 @@ class GroupScreen extends StatelessWidget {
                     children: [
                       /// Search Bar
                       CustomTextField(
+                        onChanged: (value) {
+                          controller.searchTermController.text = value;
+                        },
+                        onSubmitted: (value) {
+                          controller.searchGroup(value.trim());
+                        },
                         hintText: "Search by Group",
                       ),
                       SizedBox(height: 16.h),
@@ -79,21 +85,29 @@ class GroupScreen extends StatelessWidget {
                       Expanded(
                         child: Obx(()=>
                            ListView.builder(
-                            itemCount: controller.discoverGroupList.length,
+                            itemCount: controller.joinedGroupList.length,
                             padding: EdgeInsets.zero,
                             itemBuilder: (context, index) {
-                              final group = controller.discoverGroupList[index];
+                              final group = controller.joinedGroupList[index];
                               final groupName = group.groupName;
                               final groupMember = group.count.groupMember;
                               final groupImage = group.photo;
 
-                              return GroupSection(
-                                groupName: groupName,
-                                groupMember: groupMember.toString(),
-                                groupImage: groupImage,
-                                buttonText: "Invite",
-                                groupStaus: true,
+                              return GestureDetector(
+                                onTap: (){
+                                  Get.toNamed(AppRoute.groupPost, arguments: {'groupId': group.id});
+                                },
+                                child: GroupSection(
+                                  onTap: (){
+                                    Get.toNamed(AppRoute.invite, arguments: {'groupId': group.id});
+                                  },
+                                  groupName: groupName,
+                                  groupMember: groupMember.toString(),
+                                  groupImage: groupImage,
+                                  buttonText: "Invite",
+                                  groupStaus: true,
 
+                                ),
                               );
                             },
                           ),

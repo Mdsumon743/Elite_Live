@@ -112,7 +112,7 @@ class UserNameProfessionSection extends StatelessWidget {
           CustomButtonWhite(
             text:'Edit Profile',
             onPressed: (){
-              Get.toNamed(AppRoute.edit_profile);
+              Get.toNamed(AppRoute.editProfile);
             },
           ),
           SizedBox(height: 15.h),

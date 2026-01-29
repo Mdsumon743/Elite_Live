@@ -1,66 +1,135 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key>
-	<string>Elite Lives</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-		<key>GIDClientID</key>
-	<string>628281445808-k25kto9ln6ge4f3vopoaulhsmsq7gtll.apps.googleusercontent.com</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
+    <dict>
 
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.628281445808-k25kto9ln6ge4f3vopoaulhsmsq7gtll</string>
-				<string>fb888504579764089</string>
-			</array>
-		</dict>
-	</array>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>elite_lives</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-</dict>
+        <key>CADisableMinimumFrameDurationOnPhone</key>
+        <true/>
+
+        <key>CFBundleDevelopmentRegion</key>
+        <string>$(DEVELOPMENT_LANGUAGE)</string>
+
+        <key>CFBundleDisplayName</key>
+        <string>Elite Lives</string>
+
+        <key>CFBundleExecutable</key>
+        <string>$(EXECUTABLE_NAME)</string>
+
+        <key>CFBundleIdentifier</key>
+        <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+
+        <key>CFBundleName</key>
+        <string>elite_lives</string>
+
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+
+        <key>CFBundleShortVersionString</key>
+        <string>$(FLUTTER_BUILD_NAME)</string>
+
+        <key>CFBundleSignature</key>
+        <string>????</string>
+
+        <key>CFBundleURLTypes</key>
+        <array>
+            <dict>
+                <key>CFBundleTypeRole</key>
+                <string>Editor</string>
+                <key>CFBundleURLSchemes</key>
+                <array>
+                    <string>com.googleusercontent.apps.628281445808-k25kto9ln6ge4f3vopoaulhsmsq7gtll</string>
+                    <string>com.googleusercontent.apps.628281445808-9sopig57tblhtf10f1hfiar6cvngnlfi</string>
+                    <string>fb888504579764089</string>
+                </array>
+            </dict>
+        </array>
+
+        <key>CFBundleVersion</key>
+        <string>$(FLUTTER_BUILD_NUMBER)</string>
+
+        <key>GIDClientID</key>
+        <string>628281445808-k25kto9ln6ge4f3vopoaulhsmsq7gtll.apps.googleusercontent.com</string>
+
+        <key>LSRequiresIPhoneOS</key>
+        <true/>
+
+        <key>NSAppTransportSecurity</key>
+        <dict>
+            <key>NSAllowsArbitraryLoads</key>
+            <true/>
+            <key>NSExceptionDomains</key>
+            <dict>
+                <key>checkout.stripe.com</key>
+                <dict>
+                    <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                    <true/>
+                    <key>NSIncludesSubdomains</key>
+                    <true/>
+                </dict>
+                <key>stripe.com</key>
+                <dict>
+                    <key>NSExceptionAllowsInsecureHTTPLoads</key>
+                    <true/>
+                    <key>NSIncludesSubdomains</key>
+                    <true/>
+                </dict>
+            </dict>
+        </dict>
+
+        <key>NSCameraUsageDescription</key>
+        <string>We need camera access for live streaming</string>
+
+        <key>NSMicrophoneUsageDescription</key>
+        <string>We need microphone access for live streaming</string>
+
+        <key>NSLocalNetworkUsageDescription</key>
+        <string>We need local network access for live streaming</string>
+
+        <key>NSPhotoLibraryAddUsageDescription</key>
+        <string>We need access to save your recordings to the photo library</string>
+
+        <key>NSPhotoLibraryUsageDescription</key>
+        <string>We need access to view and save your recordings</string>
+
+        <key>UIApplicationSupportsIndirectInputEvents</key>
+        <true/>
+
+        <key>UIBackgroundModes</key>
+        <array>
+            <string>audio</string>
+            <string>voip</string>
+            <string>fetch</string>
+            <string>remote-notification</string>
+        </array>
+
+        <key>UILaunchStoryboardName</key>
+        <string>LaunchScreen</string>
+
+        <key>UIMainStoryboardFile</key>
+        <string>Main</string>
+        <key>FirebaseAppDelegateProxyEnabled</key>
+        <false/>
+
+        <key>UISupportedInterfaceOrientations</key>
+        <array>
+            <string>UIInterfaceOrientationPortrait</string>
+            <string>UIInterfaceOrientationLandscapeLeft</string>
+            <string>UIInterfaceOrientationLandscapeRight</string>
+        </array>
+
+        <key>UISupportedInterfaceOrientations~ipad</key>
+        <array>
+            <string>UIInterfaceOrientationPortrait</string>
+            <string>UIInterfaceOrientationPortraitUpsideDown</string>
+            <string>UIInterfaceOrientationLandscapeLeft</string>
+            <string>UIInterfaceOrientationLandscapeRight</string>
+        </array>
+
+        <key>io.flutter.embedded_views_preview</key>
+        <true/>
+
+    </dict>
 </plist>

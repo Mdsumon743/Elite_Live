@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:elites_live/core/global_widget/custom_snackbar.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import '../data/comment_data_model.dart';
@@ -218,16 +219,9 @@ class LiveController extends GetxController {
             timestamp: DateTime.now(),
           ),
         );
+        CustomSnackBar.success(title: "Vote Submitted", message: "Your vote has been recorded!");
 
-        Get.snackbar(
-          'Vote Submitted',
-          'Your vote has been recorded!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.black87,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 2),
-        );
+
       }
       closePollSheet();
     }

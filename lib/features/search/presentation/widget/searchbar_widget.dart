@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -31,7 +30,10 @@ class CustomSearchBar extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.only(top: 3),
           child: TextField(
-            onChanged: controller.onSearchChanged,
+            controller: controller.searchController,
+            onChanged: (value) {
+              controller.searchOtherUser(value.trim());
+            },
             style: GoogleFonts.poppins(
               fontSize: 14.sp,
               color: Colors.black,
@@ -61,7 +63,6 @@ class CustomSearchBar extends StatelessWidget {
             ),
           ),
         ),
-
       ),
     );
   }

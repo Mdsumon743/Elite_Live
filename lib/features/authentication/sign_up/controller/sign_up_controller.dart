@@ -1,5 +1,6 @@
 
 
+import 'package:elites_live/core/global_widget/custom_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -22,6 +23,7 @@ class SignUpController extends GetxController {
   final lastNameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPassword = TextEditingController();
 
   @override
   Future<void> onInit() async {
@@ -56,23 +58,13 @@ class SignUpController extends GetxController {
         );
       } else {
         // ❌ Show error but don’t navigate
-        Get.snackbar(
-          'Registration Failed',
-          response.errorMessage.isNotEmpty ? response.errorMessage : 'Something went wrong',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        CustomSnackBar.error(title: "Registration Failed", message: response.errorMessage.isNotEmpty?response.errorMessage:"SomeThing went wrong");
+
       }
     } catch (e) {
       debugPrint("Register Error: $e");
-      Get.snackbar(
-        'Error',
-        'Unable to register. Please try again.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      CustomSnackBar.error(title: "Error", message: "Unable to register. Please try again");
+
     } finally {
       isLoading.value = false;
     }
@@ -115,41 +107,21 @@ class SignUpController extends GetxController {
         final isSetup = response.responseData['isSetup'];
         if (isSetup) {
           preferencesHelper.setBool("isSetup", isSetup);
-          Get.snackbar(
-            "Success",
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-            "User logged in successfully",
-            snackPosition: SnackPosition.TOP,
-          );
-          // Get.offAllNamed(AppRoute.mainView);
+          CustomSnackBar.success(title: "Success", message: "Login success");
+
         } else {
           preferencesHelper.setBool("isSetup", isSetup);
-          Get.snackbar(
-            "Success",
-            backgroundColor: Colors.yellow,
-            colorText: Colors.black,
-            "User logged in successfully Setup your profile",
-            snackPosition: SnackPosition.TOP,
-          );
+          CustomSnackBar.success(title: "Success", message: "User logged in successfully Setup your profile");
+
           // Get.offAllNamed(AppRoute.settingGoalScreen);
         }
       } else {
-        Get.snackbar(
-          "Error",
-          response.errorMessage,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        CustomSnackBar.error(title: "Error", message: response.errorMessage);
+
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      CustomSnackBar.error(title: "Error", message: e.toString());
+
     } finally {
       isLoading.value = false;
     }

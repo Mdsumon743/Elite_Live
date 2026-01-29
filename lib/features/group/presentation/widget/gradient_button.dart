@@ -1,27 +1,37 @@
 import 'package:flutter/material.dart';
+import 'dart:developer';
+
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class GradientButton extends StatelessWidget {
-  const GradientButton({super.key, this.isGroup = false, required this.title, this.onTap});
+  const GradientButton({
+    super.key,
+    required this.title,
+    this.isGroup = false,
+    this.onTap,
+  });
+
   final bool isGroup;
   final String title;
   final VoidCallback? onTap;
 
-
   @override
   Widget build(BuildContext context) {
-    final gradient = LinearGradient(
+    final gradient = const LinearGradient(
       colors: [Color(0xFF591AD4), Color(0xFFC121A0)],
     );
 
     return GestureDetector(
       onTap: () {
-        onTap!();
-       /// Get.toNamed(AppRoute.invite);
-
+        log("🔘 GradientButton tapped: $title");
+        if (onTap != null) {
+          onTap!(); // ✅ Execute the callback
+        } else {
+          log("⚠️ No onTap callback provided");
+        }
       },
       child: Container(
-        padding: EdgeInsets.all(1.5.w), // Border thickness
+        padding: EdgeInsets.all(1.5.w),
         decoration: BoxDecoration(
           gradient: gradient,
           borderRadius: BorderRadius.circular(20.r),
@@ -49,16 +59,17 @@ class GradientButton extends StatelessWidget {
                 ),
               ),
               SizedBox(width: 6.w),
-              ShaderMask(
-                shaderCallback: (bounds) => gradient.createShader(
-                  Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+              if (isGroup)
+                ShaderMask(
+                  shaderCallback: (bounds) => gradient.createShader(
+                    Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+                  ),
+                  child: Icon(
+                    Icons.group_add,
+                    size: 18.sp,
+                    color: Colors.white,
+                  ),
                 ),
-                child: isGroup?Icon(
-                  Icons.group_add,
-                  size: 18.sp,
-                  color: Colors.white,
-                ):SizedBox.shrink(),
-              ),
             ],
           ),
         ),

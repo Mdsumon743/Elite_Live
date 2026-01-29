@@ -11,7 +11,7 @@ import 'custom_text_field.dart';
 import 'custom_text_view.dart';
 import 'date_time_helper.dart';
 
-class CommentSheet extends StatelessWidget {
+class CommentSheet extends StatefulWidget {
   final ScheduleController scheduleController;
   final String eventId;
 
@@ -22,16 +22,27 @@ class CommentSheet extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    Future.microtask(() => scheduleController.getComment(eventId));
+  State<CommentSheet> createState() => _CommentSheetState();
+}
 
+class _CommentSheetState extends State<CommentSheet> {
+  @override
+  void initState() {
+    super.initState();
+    // ✅ Call getComment only once when the widget is first created
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.scheduleController.getComment(widget.eventId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Obx(() {
-      if (scheduleController.isLoading.value) {
+      if (widget.scheduleController.isLoading.value) {
         return Center(child: CustomLoading(color: AppColors.primaryColor));
       }
 
-      final comments = scheduleController.commentList;
-
+      final comments = widget.scheduleController.commentList;
 
       return Container(
         padding: EdgeInsets.all(16.w),
@@ -59,14 +70,14 @@ class CommentSheet extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
                 CustomTextField(
-                  controller: scheduleController.commentController,
+                  controller: widget.scheduleController.commentController,
                   maxLines: 3,
                   hintText: "Write your comment...",
                 ),
                 const SizedBox(height: 10),
                 CustomElevatedButton(
                   ontap: () {
-                    scheduleController.createComment(eventId);
+                    widget.scheduleController.createComment(widget.eventId);
                   },
                   text: "Create",
                 ),
@@ -75,7 +86,7 @@ class CommentSheet extends StatelessWidget {
               // ✅ Show comments and replies
               if (comments.isNotEmpty)
                 ...comments.map(
-                  (c) => _buildCommentTile(c, scheduleController, eventId),
+                      (c) => _buildCommentTile(c, widget.scheduleController, widget.eventId),
                 ),
             ],
           ),
@@ -85,13 +96,12 @@ class CommentSheet extends StatelessWidget {
   }
 
   Widget _buildCommentTile(
-    EventComment comment,
-    ScheduleController controller,
-    String eventId,
-  ) {
+      EventComment comment,
+      ScheduleController controller,
+      String eventId,
+      ) {
     return Container(
-
-      margin:  EdgeInsets.only(bottom: 20.h),
+      margin: EdgeInsets.only(bottom: 20.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -102,15 +112,13 @@ class CommentSheet extends StatelessWidget {
               CircleAvatar(
                 backgroundImage: NetworkImage(comment.user.profileImage),
               ),
-               SizedBox(width: 10.w),
+              SizedBox(width: 10.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CustomTextView(
-                      text:
-                          "${comment.user.firstName} ${comment.user.lastName}",
-
+                      text: "${comment.user.firstName} ${comment.user.lastName}",
                       fontWeight: FontWeight.w500,
                       color: AppColors.textHeader,
                       fontSize: 14.sp,
@@ -121,13 +129,10 @@ class CommentSheet extends StatelessWidget {
                       fontSize: 12.sp,
                       color: AppColors.textBody,
                     ),
-
                     CustomTextView(
-                      text:
-                      DateTimeHelper.getTimeAgo(comment.createdAt.toString()),
-
-
-                      color: AppColors.textBody,  fontSize: 12.sp,
+                      text: DateTimeHelper.getTimeAgo(comment.createdAt.toString()),
+                      color: AppColors.textBody,
+                      fontSize: 12.sp,
                     ),
                   ],
                 ),
@@ -139,7 +144,7 @@ class CommentSheet extends StatelessWidget {
 
           // 🔹 Replies
           ...comment.replyComment.map(
-            (r) => Container(
+                (r) => Container(
               margin: const EdgeInsets.only(left: 50, top: 5),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,20 +160,15 @@ class CommentSheet extends StatelessWidget {
                       children: [
                         CustomTextView(
                           text: "${r.user.firstName} ${r.user.lastName}",
-
                           fontWeight: FontWeight.w500,
                           fontSize: 13.sp,
                           color: AppColors.textHeader,
                         ),
                         CustomTextView(text: r.replyComment),
-
-                        CustomTextView(text:
-                            DateTimeHelper.getTimeAgo(r.createdAt.toString()),
-
-
-                            color: AppColors.textBody,
-                            fontSize: 11.sp,
-
+                        CustomTextView(
+                          text: DateTimeHelper.getTimeAgo(r.createdAt.toString()),
+                          color: AppColors.textBody,
+                          fontSize: 11.sp,
                         ),
                       ],
                     ),
@@ -178,11 +178,11 @@ class CommentSheet extends StatelessWidget {
             ),
           ),
 
-           SizedBox(height: 10.h),
+          SizedBox(height: 10.h),
 
           // 🔹 Reply input
           Container(
-            margin:  EdgeInsets.only(left: 40.w),
+            margin: EdgeInsets.only(left: 40.w),
             child: Column(
               children: [
                 CustomTextField(
@@ -192,9 +192,13 @@ class CommentSheet extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () =>
-                        controller.createReply(comment.id),
-                    child: CustomTextView(text: "Reply", fontSize: 12.sp,fontWeight: FontWeight.w500,color: AppColors.textBody,),
+                    onPressed: () => controller.createReply(comment.id),
+                    child: CustomTextView(
+                      text: "Reply",
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textBody,
+                    ),
                   ),
                 ),
               ],

@@ -34,13 +34,7 @@ class CreateNewPassScreen extends StatelessWidget {
               //       controller.conPasswordController.text) {
               //     controller.resetPassword();
               //   } else {
-              //     Get.snackbar(
-              //       'Error',
-              //       "Password doesn't match",
-              //       snackPosition: SnackPosition.TOP,
-              //       backgroundColor: Colors.red,
-              //       colorText: Colors.white,
-              //     );
+
               //   }
               // }
               Get.toNamed(AppRoute.passwordChanged);

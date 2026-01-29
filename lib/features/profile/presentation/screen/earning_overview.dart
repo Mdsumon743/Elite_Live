@@ -7,13 +7,13 @@ import '../../controller/earning_overview_controller.dart';
 import '../widget/earnings_card.dart';
 import '../widget/earnings_users_data.dart';
 
-
 class EarningsPage extends StatelessWidget {
-  const EarningsPage({super.key});
+  EarningsPage({super.key});
+
+  final EarningsController controller = Get.find();
+
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(EarningsController());
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -21,7 +21,7 @@ class EarningsPage extends StatelessWidget {
           children: [
             Stack(
               children: [
-                // Top gradient section
+                // Gradient Header
                 Container(
                   height: 190.h,
                   width: double.infinity,
@@ -29,7 +29,8 @@ class EarningsPage extends StatelessWidget {
                     gradient: AppColors.primaryGradient,
                   ),
                 ),
-                // Back button + title
+
+                // Back Button + Title
                 Positioned(
                   top: 50.h,
                   left: 20.w,
@@ -51,7 +52,8 @@ class EarningsPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Main white container
+
+                // Main Content
                 Container(
                   margin: EdgeInsets.only(top: 160.h),
                   padding: EdgeInsets.symmetric(horizontal: 25.w, vertical: 20.h),
@@ -65,19 +67,34 @@ class EarningsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildTabs(controller),
+                      // SUMMARY CARD
+                      EarningsSummaryCard(),
                       SizedBox(height: 20.h),
-                      EarningSummaryCard(controller: controller),
-                      SizedBox(height: 20.h),
-                      Obx(() => controller.selectedTab.value == 0
-                          ? EarningListCard(
-                        title: "Ads Revenue",
-                        items: controller.adsRevenueList,
-                      )
-                          : EarningListCard(
-                        title: "Crowdfunding",
-                        items: controller.fundingList,
-                      )),
+
+                      // FUNDING ONLY
+                      Obx(() {
+                        if (controller.balanceHistory.isEmpty) {
+                          return const Center(
+                            child: Text("No earning data available"),
+                          );
+                        }
+
+                        final fundingItems = controller.balanceHistory.first.transactionHistory
+                            .map((tx) => {
+                          "image": "assets/images/live1.png",
+                          "title": tx.event.title,
+                          "subtitle": tx.event.text,
+                          "amount": "\$${tx.amount}",
+                          'paymentFor': tx.paymentFor
+                        })
+                            .toList();
+
+                        return EarningListCard(
+                          title: "Crowdfunding",
+                          items: fundingItems,
+                        );
+                      })
+
                     ],
                   ),
                 ),
@@ -85,53 +102,6 @@ class EarningsPage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTabs(EarningsController controller) {
-    return Obx(() => Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _tabItem(
-          title: "Ads Revenue",
-          isSelected: controller.selectedTab.value == 0,
-          onTap: () => controller.changeTab(0),
-        ),
-        SizedBox(width: 80.w),
-        _tabItem(
-          title: "Funding",
-          isSelected: controller.selectedTab.value == 1,
-          onTap: () => controller.changeTab(1),
-        ),
-      ],
-    ));
-  }
-
-  Widget _tabItem({
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 15.sp,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? AppColors.primaryColor : Colors.black54,
-            ),
-          ),
-          SizedBox(height: 5.h),
-          Container(
-            height: 2.h,
-            width: 70.w,
-            color: isSelected ? AppColors.primaryColor : Colors.transparent,
-          ),
-        ],
       ),
     );
   }

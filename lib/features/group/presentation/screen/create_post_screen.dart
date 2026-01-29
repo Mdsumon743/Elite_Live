@@ -1,13 +1,21 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../../core/global_widget/custom_text_field.dart';
 import '../../../../core/global_widget/custom_text_view.dart';
 import '../../../../core/utils/constants/app_colors.dart';
+import '../../controller/group_post_controller.dart';
 
 
 class CreatePostScreen extends StatelessWidget {
-  const CreatePostScreen({super.key});
+   CreatePostScreen({super.key});
+
+   final String groupId = Get.arguments['groupId'];
+
+   final GroupPostController controller = Get.find();
+
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +62,12 @@ class CreatePostScreen extends StatelessWidget {
                         color: AppColors.white,
                         border: Border.all(width: 1.5, color: AppColors.white),
                       ),
-                      child: CustomTextView(  text:   "Post"),
+                      child: GestureDetector(
+                        onTap: (){
+                          log("the api calling is loading");
+                          controller.createGroupPost(groupId);
+                        },
+                          child: CustomTextView(  text:   "Post")),
                     ),
                   ],
                 ),
@@ -75,7 +88,9 @@ class CreatePostScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    CustomTextField(hintText: "Write something here",maxLines: 10,)
+                    CustomTextField(
+                      controller: controller.contentController,
+                      hintText: "Write something here",maxLines: 10,)
 
                     /// post section
 

@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:elites_live/core/helper/shared_prefarenses_helper.dart';
 
 import 'package:elites_live/core/utils/constants/app_urls.dart';
+import 'package:elites_live/features/profile/data/my_following_data_model.dart';
 import 'package:elites_live/features/profile/data/user_data_model.dart';
 import 'package:get/get.dart';
 
@@ -18,6 +19,7 @@ class ProfileController extends GetxController {
    var userinfo = Rxn<UserResult>();
 
 
+
   final List<String> imageList = [
     'assets/images/event1.png',
     'assets/images/live2.png',
@@ -29,7 +31,9 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     // TODO: implement onInit
+
     getMyProfile();
+
     super.onInit();
   }
 
@@ -55,6 +59,9 @@ class ProfileController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  /// my following
+
 
 
 }

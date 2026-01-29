@@ -1,4 +1,5 @@
 import 'package:elites_live/core/global_widget/custom_text_view.dart';
+import 'package:elites_live/features/profile/controller/profile_controller.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,6 +23,8 @@ class EditProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final EditProfileController controller = Get.find();
+    final ProfileController profileController = Get.find();
+    final user = profileController.userinfo.value;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -84,7 +87,7 @@ class EditProfilePage extends StatelessWidget {
                       ),
                       Obx(
                         () => CustomDropDown(
-                          hintText: "Select Gender",
+                          hintText: user!.gender.isNotEmpty?user.gender:"Select Gender",
                           items: ["MALE", "FEMALE"],
                           selectedValue: controller.selectedGender.value,
                           onChanged: (String? value) {
@@ -101,20 +104,17 @@ class EditProfilePage extends StatelessWidget {
                         color: AppColors.textBody,
                       ),
                       CustomDateOfBirthFiled(
+                        hint: "${(user?.dob.isNullOrBlank ?? true) ? "Dob" : user!.dob}",
                         controller: controller.dateController,
                         onTap: () {
                           showModalBottomSheet(
+
                             context: context,
                             builder: (context) {
                               return CustomDatePicker(
                                 selectedDateCallback: (DateTime selectedDate) {
-                                  controller.dateController.text = DateFormat(
-                                    'yyyy-MM-dd',
-                                  ).format(
-                                    controller
-                                        .dateTimeController
-                                        .selectedDate
-                                        .value,
+                                  controller.dateController.text = DateFormat('yyyy-MM-dd').format(
+                                    controller.dateTimeController.selectedDate.value,
                                   );
                                 },
                               );
@@ -122,6 +122,7 @@ class EditProfilePage extends StatelessWidget {
                           );
                         },
                       ),
+
                       20.verticalSpace,
                       CustomTextView(
                             text:    "Profession",
@@ -132,7 +133,7 @@ class EditProfilePage extends StatelessWidget {
 
                       Obx(
                         () => CustomDropDown(
-                          hintText: "Select Profession",
+                          hintText: user!.profession.isNotEmpty?user.profession:"Select Profession",
                           items: ["Professional Model ", "Professional Model"],
                           selectedValue: controller.selectedProfession.value,
                           onChanged: (String? value) {
@@ -151,7 +152,7 @@ class EditProfilePage extends StatelessWidget {
 
                       CustomTextField(
                         controller: controller.addressController,
-                        hintText: "Dhaka, Bangladesh",
+                        hintText: user!.address.isNotEmpty?user.address:"Dhaka, Bangladesh",
                       ),
                       20.verticalSpace,
                       CustomTextView(
@@ -162,7 +163,7 @@ class EditProfilePage extends StatelessWidget {
                       ),
                       CustomTextField(
                         controller: controller.bioController,
-                        hintText: "Enter your bio here",
+                        hintText: user.bio.isNotEmpty?user.bio:"Enter your bio here",
                       ),
                       30.verticalSpace,
                       CustomElevatedButton(

@@ -143,8 +143,15 @@ class DiscoverGroup extends StatelessWidget {
                 children: [
                   /// Search Bar
                   CustomTextField(
+                    onChanged: (value) {
+                      controller.searchTermController.text = value;
+                    },
+                    onSubmitted: (value) {
+                      controller.searchGroup(value.trim());
+                    },
                     hintText: "Search by Group",
                   ),
+
                   SizedBox(height: 16.h),
 
                   /// Group List
@@ -161,9 +168,12 @@ class DiscoverGroup extends StatelessWidget {
 
                           return GestureDetector(
                             onTap: (){
-                              Get.toNamed(AppRoute.groupPost, arguments: 'groupName');
+                              Get.toNamed(AppRoute.groupPost, arguments: {'groupId': group.id});
                             },
                             child: GroupSection(
+                              onTap: (){
+                                controller.joinGroup(group.id);
+                              },
                               buttonText: "Join Now",
                               groupName: groupName,
                               groupMember: groupMember.toString(),

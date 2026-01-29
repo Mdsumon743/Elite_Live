@@ -1,4 +1,6 @@
 
+
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -15,6 +17,7 @@ import '../widget/profile_tab_widget.dart';
 class ProfilePage extends StatelessWidget {
   final ProfileController controller = Get.find();
   final EditProfileController editProfileController = Get.find();
+
 
   ProfilePage({super.key});
 
@@ -65,7 +68,9 @@ class ProfilePage extends StatelessWidget {
                     leading: Container(
                       padding: EdgeInsets.all(10.r),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryGradient.colors[0].withValues(alpha: 0.1),
+                        color: AppColors.primaryGradient.colors[0].withValues(
+                          alpha: 0.1,
+                        ),
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                       child: Icon(
@@ -95,7 +100,9 @@ class ProfilePage extends StatelessWidget {
                     leading: Container(
                       padding: EdgeInsets.all(10.r),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryGradient.colors[0].withValues(alpha: 0.1),
+                        color: AppColors.primaryGradient.colors[0].withValues(
+                          alpha: 0.1,
+                        ),
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                       child: Icon(
@@ -200,19 +207,19 @@ class ProfilePage extends StatelessWidget {
 
                         return user.firstName.isNotEmpty
                             ? CustomTextView(
-                               text:   "${user.firstName} ${user.lastName}",
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textBody,
-                        )
+                              text: "${user.firstName} ${user.lastName}",
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textBody,
+                            )
                             : Text(
-                          'Jolie Topley',
-                          style: GoogleFonts.inter(
-                            fontSize: 20.sp,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF2D2D2D),
-                          ),
-                        );
+                              'Jolie Topley',
+                              style: GoogleFonts.inter(
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF2D2D2D),
+                              ),
+                            );
                       }),
 
                       Obx(() {
@@ -220,7 +227,7 @@ class ProfilePage extends StatelessWidget {
 
                         if (user == null) {
                           return CustomTextView(
-                                 text:   'Jolie Topley',
+                            text: 'Jolie Topley',
                             fontSize: 20.sp,
                             fontWeight: FontWeight.w500,
                             color: const Color(0xFF2D2D2D),
@@ -229,17 +236,17 @@ class ProfilePage extends StatelessWidget {
 
                         return user.profession.isNotEmpty
                             ? CustomTextView(
-                               text:   user.profession,
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textBody,
-                        )
+                              text: user.profession,
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textBody,
+                            )
                             : CustomTextView(
-                              text:    'Model',
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textBody,
-                        );
+                              text: 'Model',
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textBody,
+                            );
                       }),
 
                       SizedBox(height: 24.h),
@@ -249,26 +256,29 @@ class ProfilePage extends StatelessWidget {
                         children: [
                           Column(
                             children: [
-                              Text(
-                                "468k",
-                                style: GoogleFonts.poppins(
+
+                              Obx(() {
+                                final follower = controller.userinfo.value?.followersCount?.toString() ?? "0";
+
+                                return CustomTextView(
+                                  text: follower,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 18.sp,
-                                  color: Color(0xff191919),
-                                ),
-                              ),
-                              Text(
-                                "Followers",
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: 14.sp,
-                                  color: AppColors.textColor,
-                                ),
+                                  color: AppColors.textHeader,
+                                );
+                              }),
+
+                              CustomTextView(
+                                text: "Followers",
+
+                                fontWeight: FontWeight.w400,
+                                fontSize: 14.sp,
+                                color: AppColors.textColor,
                               ),
                             ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(
+                          Container(
+                            margin: const EdgeInsets.only(
                               left: 24.0,
                               right: 24,
                             ),
@@ -280,26 +290,31 @@ class ProfilePage extends StatelessWidget {
                           ),
                           Column(
                             children: [
-                              Text(
-                                "356",
-                                style: GoogleFonts.poppins(
+                              Obx(() {
+                                final user = controller.userinfo.value;
+
+                                final count = user?.followingCount?.toString() ?? "0";
+
+                                return CustomTextView(
+                                  text: count,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 18.sp,
-                                  color: Color(0xff191919),
-                                ),
-                              ),
-                              Text(
-                                "Following",
-                                style: GoogleFonts.poppins(
+                                  color: AppColors.textHeader,
+                                );
+                              }),
+
+                              CustomTextView(
+                               text:  "Following",
+
                                   fontWeight: FontWeight.w400,
                                   fontSize: 14.sp,
                                   color: AppColors.textColor,
-                                ),
+
                               ),
                             ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(
+                          Container(
+                            margin: const EdgeInsets.only(
                               left: 24.0,
                               right: 24,
                             ),
@@ -311,14 +326,21 @@ class ProfilePage extends StatelessWidget {
                           ),
                           Column(
                             children: [
-                              Text(
-                                "200",
-                                style: GoogleFonts.poppins(
+                              Obx(() {
+                                // Force rebuild by accessing the list
+                                final count =
+                                controller.userinfo.value?.count.event;
+
+
+                                return CustomTextView(
+                                  text:  count.toString(),
+
                                   fontWeight: FontWeight.w600,
                                   fontSize: 18.sp,
-                                  color: Color(0xff191919),
-                                ),
-                              ),
+                                  color: AppColors.textHeader,
+
+                                );
+                              }),
                               Text(
                                 "Posts",
                                 style: GoogleFonts.poppins(
@@ -335,7 +357,7 @@ class ProfilePage extends StatelessWidget {
                       CustomButtonWhite(
                         text: 'Edit Profile',
                         onPressed: () {
-                          Get.toNamed(AppRoute.edit_profile);
+                          Get.toNamed(AppRoute.editProfile);
                         },
                       ),
                       SizedBox(height: 15.h),
@@ -360,15 +382,22 @@ class ProfilePage extends StatelessWidget {
                           if (user == null) {
                             return CircleAvatar(
                               radius: 50.r,
-                              backgroundImage: const AssetImage('assets/images/profile_image.jpg'),
+                              backgroundImage: const AssetImage(
+                                'assets/images/profile_image.jpg',
+                              ),
                             );
                           }
 
                           return CircleAvatar(
                             radius: 50.r,
-                            backgroundImage: user.profileImage != null && user.profileImage!.isNotEmpty
-                                ? NetworkImage(user.profileImage!)
-                                : const AssetImage('assets/images/profile_image.jpg') as ImageProvider,
+                            backgroundImage:
+                                user.profileImage != null &&
+                                        user.profileImage!.isNotEmpty
+                                    ? NetworkImage(user.profileImage!)
+                                    : const AssetImage(
+                                          'assets/images/profile_image.jpg',
+                                        )
+                                        as ImageProvider,
                           );
                         }),
 

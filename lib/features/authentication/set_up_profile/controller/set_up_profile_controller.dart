@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:elites_live/core/global_widget/custom_elevated_button.dart';
+import 'package:elites_live/core/global_widget/custom_snackbar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -65,35 +66,18 @@ class SetUpProfileController extends GetxController {
   Future<void> setupProfile() async {
     // Validate required fields
     if (firstNameController.text.isEmpty) {
-      Get.snackbar(
-        "Error",
-        "First name is required",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomSnackBar.warning(title: "Warning", message: "First Name is required");
+
       return;
     }
 
     if (lastNameController.text.isEmpty) {
-      Get.snackbar(
-        "Error",
-        "Last name is required",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomSnackBar.warning(title: "Warning", message: "Last Name is required");
       return;
     }
 
     if (selectedGender.value == null || selectedGender.value!.isEmpty) {
-      Get.snackbar(
-        "Error",
-        "Please select gender",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomSnackBar.warning(title: "Warning", message: "Please select gender");
       return;
     }
 
@@ -108,13 +92,8 @@ class SetUpProfileController extends GetxController {
       log("The user token is $userToken");
 
       if (userToken == null || userToken.isEmpty) {
-        Get.snackbar(
-          "Error",
-          "User token not found. Please login again.",
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomSnackBar.error(title: "Error", message: "User token not found. Please login again.");
+
         isLoading.value = false;
         return;
       }
@@ -206,13 +185,8 @@ class SetUpProfileController extends GetxController {
         log("Profile setup completed. isSetup saved as: true");
 
         // Show success snackbar
-        Get.snackbar(
-          "Success",
-          responseData['message'] ?? "Profile setup completed successfully",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomSnackBar.success(title: "Success", message: responseData['message'] ?? "Profile setup completed successfully");
+
 
         // Show success dialogue ONLY on successful API response
         showSuccessDialogue();
@@ -228,25 +202,15 @@ class SetUpProfileController extends GetxController {
         } catch (e) {
           log("Error parsing error response: $e");
         }
+        CustomSnackBar.error(title: "Error", message: errorMessage);
 
-        Get.snackbar(
-          "Error",
-          errorMessage,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
+
       }
     } catch (e) {
       // FIXED: Don't show success dialogue on error
       log("Error in setupProfile: $e");
-      Get.snackbar(
-        "Error",
-        "Something went wrong: ${e.toString()}",
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
+      CustomSnackBar.error(title: "Error", message: e.toString());
+
     } finally {
       isLoading.value = false;
     }

@@ -36,3 +36,14 @@
     return null; 
   }
 
+   String? validateConfirmPassword(String? value, String newPassword) {
+     if (value == null || value.isEmpty) {
+       return 'Confirm password cannot be empty';
+     }
+     if (value != newPassword) {
+       return 'Passwords do not match';
+     }
+     return null;
+   }
+
+

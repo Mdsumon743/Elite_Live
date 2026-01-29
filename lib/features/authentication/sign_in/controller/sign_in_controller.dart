@@ -1,5 +1,7 @@
 import 'dart:developer';
 
+import 'package:elites_live/core/global_widget/custom_snackbar.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +21,7 @@ class SignInController extends GetxController {
   RxBool isLoading = false.obs;
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  String fcmToken = "";
 
   @override
   Future<void> onInit() async {
@@ -27,12 +30,19 @@ class SignInController extends GetxController {
   }
 
   Future<void> signIn() async {
-    String? token = "";
+    String? token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      fcmToken = token; // ✅ Assign it here
+      log("FCM Token: $token");
+    } else {
+      log("❌ Failed to get FCM token.");
+    }
     Map<String, dynamic> registration = {
       "email": emailController.text,
       "password": passwordController.text,
       "fcmToken": token,
     };
+    log("the fcm token is $token");
 
     try {
       isLoading.value = true;
@@ -49,38 +59,25 @@ class SignInController extends GetxController {
           "userToken",
           response.responseData['accessToken'],
         );
+        log("the user id after login is ${response.responseData['id']}");
+        preferencesHelper.setString('userId', response.responseData['id']);
+        log("the user id after save is ${preferencesHelper.getString('userId')}");
         log("the api response is ${response.responseData}");
         Get.offAllNamed(AppRoute.setupProfile, arguments: {});
         final isSetup = response.responseData['isSetup'];
         if (isSetup) {
           preferencesHelper.setBool("isSetup", isSetup);
-          Get.snackbar(
-            "Success",
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-            "User logged in successfully",
-            snackPosition: SnackPosition.TOP,
-          );
+          CustomSnackBar.success(title: "Success", message: "User logged in successfully");
+
 
           Get.offAllNamed(AppRoute.mainView);
         } else {
           preferencesHelper.setBool("isSetup", isSetup);
-          Get.snackbar(
-            "Success",
-            backgroundColor: Colors.yellow,
-            colorText: Colors.black,
-            "User logged in successfully Setup your profile",
-            snackPosition: SnackPosition.TOP,
-          );
+          CustomSnackBar.success(title: "Success", message: "User logged in successfully");
           // Get.offAllNamed(AppRoute.settingGoalScreen);
         }
       } else {
-        Get.snackbar(
-          "Error",
-          response.errorMessage,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        CustomSnackBar.error(title: "Error", message: response.errorMessage);
       }
     } catch (e) {
       debugPrint("Error: $e");
@@ -125,41 +122,21 @@ class SignInController extends GetxController {
         final isSetup = response.responseData['isSetup'];
         if (isSetup) {
           preferencesHelper.setBool("isSetup", isSetup);
-          Get.snackbar(
-            "Success",
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-            "User logged in successfully",
-            snackPosition: SnackPosition.TOP,
-          );
+          CustomSnackBar.success(title: "Success", message: "User logged in successfully");
+
           // Get.offAllNamed(AppRoute.mainView);
         } else {
           preferencesHelper.setBool("isSetup", isSetup);
-          Get.snackbar(
-            "Success",
-            backgroundColor: Colors.yellow,
-            colorText: Colors.black,
-            "User logged in successfully Setup your profile",
-            snackPosition: SnackPosition.TOP,
-          );
+          CustomSnackBar.success(title: "Success", message: "User logged in successfully");
           // Get.offAllNamed(AppRoute.settingGoalScreen);
         }
       } else {
-        Get.snackbar(
-          "Error",
-          response.errorMessage,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        CustomSnackBar.error(title: "Error", message: response.errorMessage);
+
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      CustomSnackBar.error(title: "Error", message: e.toString());
+
     } finally {
       isLoading.value = false;
     }

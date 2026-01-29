@@ -160,6 +160,18 @@ class CreateFundingScreen extends StatelessWidget {
 
                     // ... avatar and name ...
                     SizedBox(height: 32.h),
+                    CustomTextView(text: "Title", fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.liveText,),
+                    SizedBox(height: 8.h),
+                    CustomTextField(
+                      controller: controller.crowdFundTitleController,
+                    ),
+
+                    SizedBox(height: 12.h,),
+                    CustomTextView(text: "Description", fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.liveText,),
                     CustomTextField(
                       controller: controller.descriptionController,
                       hintText: "Write something here",

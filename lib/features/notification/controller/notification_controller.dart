@@ -1,153 +1,147 @@
+import 'dart:developer';
+
+import 'package:elites_live/core/helper/shared_prefarenses_helper.dart';
+import 'package:elites_live/core/services/network_caller/repository/network_caller.dart';
+import 'package:elites_live/core/utils/constants/app_urls.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../data/notification_data_model.dart';
 
+
+
 class NotificationController extends GetxController {
-  var notifications = <NotificationModel>[].obs;
-  var isLoading = false.obs;
+  RxList<NotificationResult> notificationList = <NotificationResult>[].obs;
+  RxBool isLoading = false.obs;
+
+  final NetworkCaller networkCaller = NetworkCaller();
+  final SharedPreferencesHelper helper = SharedPreferencesHelper();
 
   @override
   void onInit() {
     super.onInit();
-    loadNotifications();
+    getAllNotification();
   }
 
-  void loadNotifications() {
-    isLoading.value = true;
+  Future<void> getAllNotification() async {
+    try {
+      isLoading.value = true;
 
-    // Sample data
-    notifications.value = [
-      NotificationModel(
-        id: '1',
-        userName: 'Floyd Miles',
-        userImage: 'https://i.pravatar.cc/150?img=1',
-        message: 'Started following you',
-        timestamp: DateTime.now().subtract(const Duration(hours: 4)),
-        isVerified: true,
-      ),
-      NotificationModel(
-        id: '2',
-        userName: 'Darrell Steward',
-        userImage: 'https://i.pravatar.cc/150?img=2',
-        message: 'Mentioned you in a comment',
-        timestamp: DateTime.now().subtract(const Duration(hours: 6)),
-        isVerified: true,
-      ),
-      NotificationModel(
-        id: '3',
-        userName: 'Kristin Watson',
-        userImage: 'https://i.pravatar.cc/150?img=3',
-        message: 'Started following you',
-        timestamp: DateTime.now().subtract(const Duration(hours: 8)),
-        isVerified: true,
-      ),
-      NotificationModel(
-        id: '4',
-        userName: 'Marvin McKinney',
-        userImage: 'https://i.pravatar.cc/150?img=4',
-        message: 'Mentioned you in...',
-        timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
-        isVerified: true,
-      ),
-      NotificationModel(
-        id: '5',
-        userName: 'Jenny Wilson',
-        userImage: 'https://i.pravatar.cc/150?img=5',
-        message: 'Started following you',
-        timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 5)),
-        isVerified: true,
-      ),
-      NotificationModel(
-        id: '6',
-        userName: 'Arlene McCoy',
-        userImage: 'https://i.pravatar.cc/150?img=6',
-        message: 'Mentioned you in a comment',
-        timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 8)),
-        isVerified: true,
-      ),
-      NotificationModel(
-        id: '7',
-        userName: 'Robert Fox',
-        userImage: 'https://i.pravatar.cc/150?img=7',
-        message: 'Started following you',
-        timestamp: DateTime.now().subtract(const Duration(days: 3)),
-        isVerified: true,
-      ),
-      NotificationModel(
-        id: '8',
-        userName: 'Wade Warren',
-        userImage: 'https://i.pravatar.cc/150?img=8',
-        message: 'Mentioned you in a comment',
-        timestamp: DateTime.now().subtract(const Duration(days: 3, hours: 4)),
-        isVerified: true,
-      ),
-    ];
+      final token = helper.getString("userToken");
+      log("Fetching notifications with token: $token");
 
-    isLoading.value = false;
-  }
+      final response = await networkCaller.getRequest(
+        AppUrls.getAllNotification,
+        token: token,
+      );
 
-  // Group notifications by date
-  Map<String, List<NotificationModel>> get groupedNotifications {
-    Map<String, List<NotificationModel>> grouped = {};
+      if (response.statusCode == 200 && response.isSuccess) {
+        log("API Response: ${response.responseData}");
 
-    for (var notification in notifications) {
-      String dateKey = getDateHeader(notification.timestamp);
-      if (!grouped.containsKey(dateKey)) {
-        grouped[dateKey] = [];
+        final data = response.responseData;
+
+        if (data is List) {
+          // API returned array only
+          notificationList.assignAll(
+            data.map((e) => NotificationResult.fromJson(e)).toList(),
+          );
+        } else if (data is Map<String, dynamic>) {
+          // API returned full object
+          final model = NotificationDataModel.fromJson(data);
+          notificationList.assignAll(model.result);
+        } else {
+          log("Unexpected response type: ${data.runtimeType}");
+        }
+
+        // Sort newest first
+        notificationList.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       }
-      grouped[dateKey]!.add(notification);
+    } catch (e, st) {
+      log("Error fetching notifications: $e\n$st");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  
+  /// update notificationStatus 
+    Future<void> updateNotificationStatus(String notificationId)async{
+    isLoading.value = true;
+    final token = helper.getString("userToken");
+    log("Fetching notifications status with token: $token");
+    
+    try{
+      var response = await networkCaller.patchRequest(AppUrls.updateNotificationStatus(notificationId), body: {}, token: token);
+      if(response.isSuccess) {
+        log("the response is ${response.responseData}");
+        await getAllNotification();
+      }
+    }
+    catch(e){
+      log("the exception is ${e.toString()}");
+    }
+    
+    finally{
+      isLoading.value = false;
+    }
     }
 
-    return grouped;
+  /// Return grouped notifications keyed by date header (Today/Yesterday/MMM d, yyyy)
+  Map<String, List<NotificationResult>> get groupedNotifications {
+    final Map<String, List<NotificationResult>> map = {};
+
+    for (final n in notificationList) {
+      final header = _getDateHeader(n.createdAt);
+      map.putIfAbsent(header, () => []);
+      map[header]!.add(n);
+    }
+
+    // maintain order: Today first, Yesterday second, then descending dates
+    final orderedKeys = map.keys.toList()..sort((a, b) {
+      DateTime pa = _parseHeaderToDate(a);
+      DateTime pb = _parseHeaderToDate(b);
+      return pb.compareTo(pa);
+    });
+
+    final orderedMap = <String, List<NotificationResult>>{};
+    for (final k in orderedKeys) {
+      orderedMap[k] = map[k]!;
+    }
+
+    return orderedMap;
   }
 
-  // Get date header (Today, Yesterday, or formatted date)
-  String getDateHeader(DateTime date) {
+  String _getDateHeader(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final yesterday = DateTime(now.year, now.month, now.day - 1);
-    final notificationDate = DateTime(date.year, date.month, date.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final d = DateTime(date.year, date.month, date.day);
 
-    if (notificationDate == today) {
-      return 'Today';
-    } else if (notificationDate == yesterday) {
-      return 'Yesterday';
-    } else {
-      return DateFormat('MMMM d, yyyy').format(date);
+    if (d == today) return 'Today';
+    if (d == yesterday) return 'Yesterday';
+    return DateFormat('MMMM d, yyyy').format(date); // e.g. December 25, 2025
+  }
+
+  // Helper to convert header back to a DateTime for sorting
+  DateTime _parseHeaderToDate(String header) {
+    if (header == 'Today') return DateTime.now();
+    if (header == 'Yesterday') return DateTime.now().subtract(const Duration(days: 1));
+
+    try {
+      return DateFormat('MMMM d, yyyy').parse(header);
+    } catch (_) {
+      return DateTime(1970);
     }
   }
 
-  // Get time ago text
   String getTimeAgo(DateTime timestamp) {
     final now = DateTime.now();
-    final difference = now.difference(timestamp);
+    final diff = now.difference(timestamp);
 
-    if (difference.inSeconds < 60) {
-      return '${difference.inSeconds}s';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d';
-    } else {
-      return DateFormat('MMM d').format(timestamp);
-    }
-  }
-
-  void markAsRead(String notificationId) {
-    int index = notifications.indexWhere((n) => n.id == notificationId);
-    if (index != -1) {
-      notifications[index] = NotificationModel(
-        id: notifications[index].id,
-        userName: notifications[index].userName,
-        userImage: notifications[index].userImage,
-        message: notifications[index].message,
-        timestamp: notifications[index].timestamp,
-        isVerified: notifications[index].isVerified,
-        isRead: true,
-      );
-      notifications.refresh();
-    }
+    if (diff.inSeconds < 60) return '${diff.inSeconds}s';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    if (diff.inDays < 7) return '${diff.inDays}d';
+    return DateFormat('MMM d').format(timestamp);
   }
 }
+

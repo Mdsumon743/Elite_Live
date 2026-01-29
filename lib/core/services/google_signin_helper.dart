@@ -1,4 +1,5 @@
 
+import 'package:elites_live/core/global_widget/custom_snackbar.dart';
 import 'package:elites_live/core/helper/shared_prefarenses_helper.dart';
 import 'package:elites_live/core/services/network_caller/repository/network_caller.dart';
 import 'package:elites_live/core/utils/constants/app_urls.dart';
@@ -113,13 +114,8 @@ class GoogleSignInHelper {
           final isSetup = response.responseData['isSetup'];
           if (isSetup) {
             preferencesHelper.setBool("isSetup", isSetup);
-            Get.snackbar(
-              "Success",
-              backgroundColor: Colors.green,
-              colorText: Colors.white,
-              "User logged in successfully",
-              snackPosition: SnackPosition.TOP,
-            );
+            CustomSnackBar.success(title: "Success", message: "User logged in successfully");
+
 
             Get.offAllNamed(AppRoute.mainView);
           } else {

@@ -1,5 +1,6 @@
 
 
+import 'package:elites_live/core/global_widget/custom_snackbar.dart';
 import 'package:elites_live/core/global_widget/custom_text_view.dart';
 import 'package:elites_live/core/utils/constants/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +63,8 @@ class ShareSheet extends StatelessWidget {
                 'Copy link',
                     () {
                   Get.back();
-                  Get.snackbar('Link Copied', 'Link copied to clipboard');
+                  CustomSnackBar.success(title: "Link Copied", message: "Link copied to clipboard");
+
                 },
                 AppColors.textHeader,
               ),
@@ -71,7 +73,8 @@ class ShareSheet extends StatelessWidget {
                 'TikTok',
                     () {
                   Get.back();
-                  Get.snackbar('Share', 'Opening TikTok...');
+                  CustomSnackBar.success(title: "Share", message: "Opening TikTok...");
+
                 },
                 AppColors.textHeader,
               ),
@@ -80,7 +83,8 @@ class ShareSheet extends StatelessWidget {
                 'Facebook',
                     () {
                   Get.back();
-                  Get.snackbar('Share', 'Opening Facebook...');
+                  CustomSnackBar.success(title: "Share", message: "Opening Facebook...");
+
                 },
                 Color(0xFF1877F2),
               ),
@@ -89,7 +93,8 @@ class ShareSheet extends StatelessWidget {
                 'Instagram',
                     () {
                   Get.back();
-                  Get.snackbar('Share', 'Opening Instagram...');
+                  CustomSnackBar.success(title: "Share", message: "Opening Instagram...");
+
                 },
                 AppColors.primaryColor,
               ),

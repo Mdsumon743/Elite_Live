@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -51,7 +48,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAijNl4y_5YVJMCFLvs8xANJl_UoIqTg00',
-    appId: '1:628281445808:android:4506d0168041e15d1c9a75',
+    appId: '1:628281445808:android:f8b8772c7a9edff51c9a75',
     messagingSenderId: '628281445808',
     projectId: 'elitelive-81772',
     storageBucket: 'elitelive-81772.firebasestorage.app',
@@ -59,10 +56,23 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBW79PG54mvvA6SxuSDz-fzXbn26xoBHWw',
-    appId: '1:628281445808:ios:178adde49dc3fcf41c9a75',
+    appId: '1:628281445808:ios:440d06bdac7a3ceb1c9a75',
     messagingSenderId: '628281445808',
     projectId: 'elitelive-81772',
     storageBucket: 'elitelive-81772.firebasestorage.app',
-    iosBundleId: 'com.example.eliteLives',
+    androidClientId: '628281445808-6rcarfi8tvkngpfsh4eboioe2qm81mra.apps.googleusercontent.com',
+    iosClientId: '628281445808-gifqcjfa8advdrdch4jt9gsf9d7drkae.apps.googleusercontent.com',
+    iosBundleId: 'com.elitelive.morgan.mobileapp',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyAhxXKECi9lx4JHLJqDru5wp7MAjF5wWaI',
+    appId: '1:628281445808:web:39a758792ca911401c9a75',
+    messagingSenderId: '628281445808',
+    projectId: 'elitelive-81772',
+    authDomain: 'elitelive-81772.firebaseapp.com',
+    storageBucket: 'elitelive-81772.firebasestorage.app',
+    measurementId: 'G-8LBP6J0P5H',
+  );
+
 }

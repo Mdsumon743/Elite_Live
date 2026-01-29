@@ -50,74 +50,85 @@ class ChangePassword extends StatelessWidget {
                     ],
                   ),
                 ),
-                Container(
-                  width: double.maxFinite,
-                  margin: EdgeInsets.only(top: 160.h),
-                  padding: EdgeInsets.symmetric(horizontal: 25.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24.r),
-                      topRight: Radius.circular(24.r),
+                Form(
+                  key: controller.formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  child: Container(
+                    width: double.maxFinite,
+                    margin: EdgeInsets.only(top: 160.h),
+                    padding: EdgeInsets.symmetric(horizontal: 25.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(24.r),
+                        topRight: Radius.circular(24.r),
+                      ),
                     ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                       SizedBox(height: 32.h,),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: CustomTextView(
-                             text:       "Old Password",
-                            fontSize: 16.sp,
-                            color: AppColors.textColorBlack,
-                            fontWeight: FontWeight.w500,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                         SizedBox(height: 32.h,),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: CustomTextView(
+                               text:       "Old Password",
+                              fontSize: 16.sp,
+                              color: AppColors.textColorBlack,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 5.h),
-                        CustomPasswordField(
-                          hints: "Enter Old Password",
-                          controller: controller.passwordController,
-                          validator: validatePassword,
-                        ),
-                        SizedBox(height: 16.h),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: CustomTextView(
-                                text:    "New Password",
-                            fontSize: 16.sp,
-                            color: AppColors.textColorBlack,
-                            fontWeight: FontWeight.w500,
+                          SizedBox(height: 5.h),
+                          CustomPasswordField(
+                            hints: "Enter Old Password",
+                            controller: controller.passwordController,
+                            validator: validatePassword,
                           ),
-                        ),
-                        SizedBox(height: 5.h),
-                        CustomPasswordField(
-                          hints: "Enter New Password",
-                          controller: controller.passwordController,
-                          validator: validatePassword,
-                        ),
-                        SizedBox(height: 16.h),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: CustomTextView(
-                                  text: "Confirm New Password",
-                            fontSize: 16.sp,
-                            color: AppColors.textColorBlack,
-                            fontWeight: FontWeight.w500,
+                          SizedBox(height: 16.h),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: CustomTextView(
+                                  text:    "New Password",
+                              fontSize: 16.sp,
+                              color: AppColors.textColorBlack,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 5.h),
-                        CustomPasswordField(
-                          hints: "Confirm New Password",
-                          controller: controller.passwordController,
-                          validator: validatePassword,
-                        ),
-                       SizedBox(height: 280.h,),
-                        CustomElevatedButton(ontap: (){}, text: "Change Now"),
-                        SizedBox(height: 16.h),
-                      ],
+                          SizedBox(height: 5.h),
+                          CustomPasswordField(
+                            hints: "Enter New Password",
+                            controller: controller.newPasswordController,
+                            validator: validatePassword,
+                          ),
+                          SizedBox(height: 16.h),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: CustomTextView(
+                                    text: "Confirm New Password",
+                              fontSize: 16.sp,
+                              color: AppColors.textColorBlack,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 5.h),
+                          CustomPasswordField(
+                            hints: "Confirm New Password",
+                            controller: controller.confirmPasswordController,
+                            validator: (value) =>
+                                validateConfirmPassword(value, controller.newPasswordController.text),
+                          ),
+                         SizedBox(height: 280.h,),
+                          CustomElevatedButton(ontap: (){
+                            if (controller.formKey.currentState!.validate()) {
+                              controller.changePassword();
+                            }
+
+
+                          }, text: "Change Now"),
+                          SizedBox(height: 16.h),
+                        ],
+                      ),
                     ),
                   ),
                 ),

@@ -5,26 +5,48 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../controller/home_controller.dart';
+
 import '../../controller/video_player_controller.dart';
 
-class VideoPlayerSection extends StatelessWidget {
-   VideoPlayerSection({super.key});
-   final controller = Get.find<HomeController>();
 
-   final VideoController videoController = Get.find();
+
+class VideoPlayerSection extends StatefulWidget {
+  final String videoUrl;
+  const VideoPlayerSection({super.key, required this.videoUrl});
+
+  @override
+  State<VideoPlayerSection> createState() => _VideoPlayerSectionState();
+}
+
+class _VideoPlayerSectionState extends State<VideoPlayerSection> {
+  late VideoController videoController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final validUrl = widget.videoUrl.isEmpty
+        ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+        : widget.videoUrl;
+
+    // ✅ Create unique instance for each video
+    videoController = VideoController(validUrl);
+    videoController.onInit();
+  }
+
+  @override
+  void dispose() {
+    videoController.onClose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return  Container(
+    return Container(
       margin: EdgeInsets.symmetric(vertical: 16.h),
-      /*height: 220.h,
-                  width: 375.w,*/
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12.r),
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
           colors: [
             const Color(0xFF000000).withValues(alpha: 0.1),
             const Color(0xFF000000),
@@ -33,109 +55,110 @@ class VideoPlayerSection extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: Obx(() {
-        final controller = videoController;
         final isInitialized =
-            controller.videoPlayerController.value.isInitialized;
-        final isPlaying = controller.isPlaying.value;
-        final isMuted = controller.isMuted.value;
-        final pos = controller.position.value;
-        final dur = controller.duration.value;
+            videoController.videoPlayerController.value.isInitialized;
+        final isPlaying = videoController.isPlaying.value;
+        final isMuted = videoController.isMuted.value;
+        final pos = videoController.position.value;
+        final dur = videoController.duration.value;
+        final hasError = videoController.hasError.value;
         final progress =
-        dur.inMilliseconds > 0
-            ? pos.inMilliseconds / dur.inMilliseconds
-            : 0.0;
+        dur.inMilliseconds > 0 ? pos.inMilliseconds / dur.inMilliseconds : 0.0;
 
         return Stack(
           alignment: Alignment.center,
           children: [
-            // Video Player
-            if (isInitialized)
-              AspectRatio(
-                aspectRatio:
-                controller
-                    .videoPlayerController
-                    .value
-                    .aspectRatio,
-                child: VideoPlayer(
-                  controller.videoPlayerController,
+            // VIDEO PLAYER OR ERROR
+            if (hasError)
+              Container(
+                height: 200.h,
+                color: Colors.black87,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.white, size: 48.sp),
+                      SizedBox(height: 8.h),
+                      CustomTextView(
+                        text: "Video unavailable",
+                        color: Colors.white,
+                        fontSize: 14.sp,
+                      ),
+                    ],
+                  ),
                 ),
               )
+            else if (isInitialized)
+              AspectRatio(
+                aspectRatio:
+                videoController.videoPlayerController.value.aspectRatio,
+                child: VideoPlayer(videoController.videoPlayerController),
+              )
             else
-              const Center(
-                child: CircularProgressIndicator(
-                  color: Colors.white,
+              Container(
+                height: 200.h,
+                color: Colors.black87,
+                child: const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
                 ),
               ),
 
-            // Play / Pause Button
-            IconButton(
-              iconSize: 60.sp,
-              onPressed: controller.togglePlayPause,
-              icon: Icon(
-                isPlaying
-                    ? Icons.pause_circle_filled_rounded
-                    : Icons.play_circle_fill_rounded,
-                color: Colors.white.withOpacity(0.9),
+            // PLAY / PAUSE BUTTON
+            if (!hasError)
+              IconButton(
+                iconSize: 60.sp,
+                onPressed: videoController.togglePlayPause,
+                icon: Icon(
+                  isPlaying ? Icons.pause_circle : Icons.play_circle,
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
               ),
-            ),
 
-            // Bottom Controls
-            Positioned(
-              bottom: 2.h,
-              left: 12.w,
-              right: 12.w,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SliderTheme(
-                    data: SliderThemeData(
-                      trackHeight: 3.h,
-                      thumbShape: const RoundSliderThumbShape(
-                        enabledThumbRadius: 5,
-                      ),
-                    ),
-                    child: Slider(
+            // CONTROLS
+            if (!hasError && isInitialized)
+              Positioned(
+                bottom: 2.h,
+                left: 12.w,
+                right: 12.w,
+                child: Column(
+                  children: [
+                    Slider(
                       value: progress.clamp(0.0, 1.0),
                       activeColor: Colors.blueAccent,
                       inactiveColor: Colors.white30,
                       onChanged: (value) {
                         final newPosition = dur * value;
-                        controller.videoPlayerController.seekTo(
-                          newPosition,
-                        );
+                        videoController.videoPlayerController.seekTo(newPosition);
                       },
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
-                    children: [
-                      CustomTextView(       text: Format.formatDuration(pos)), 
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: controller.toggleMute,
-                            child: Icon(
-                              isMuted
-                                  ? Icons.volume_off
-                                  : Icons.volume_up,
-                              color: Colors.white,
-                              size: 20.sp,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CustomTextView(text: Format.formatDuration(pos)),
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: videoController.toggleMute,
+                              child: Icon(
+                                isMuted ? Icons.volume_off : Icons.volume_up,
+                                color: Colors.white,
+                                size: 18.sp,
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 10.w),
-                          CustomTextView(       text: Format.formatDuration(dur))
-
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+                            SizedBox(width: 10.w),
+                            CustomTextView(text: Format.formatDuration(dur)),
+                          ],
+                        )
+                      ],
+                    )
+                  ],
+                ),
               ),
-            ),
           ],
         );
       }),
     );
   }
 }
+
+

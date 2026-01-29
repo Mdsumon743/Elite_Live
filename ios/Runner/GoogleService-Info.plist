@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>628281445808-gifqcjfa8advdrdch4jt9gsf9d7drkae.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.628281445808-gifqcjfa8advdrdch4jt9gsf9d7drkae</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>628281445808-6rcarfi8tvkngpfsh4eboioe2qm81mra.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyBW79PG54mvvA6SxuSDz-fzXbn26xoBHWw</string>
 	<key>GCM_SENDER_ID</key>
@@ -9,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.eliteLives</string>
+	<string>com.elitelive.morgan.mobileapp</string>
 	<key>PROJECT_ID</key>
 	<string>elitelive-81772</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:628281445808:ios:178adde49dc3fcf41c9a75</string>
+	<string>1:628281445808:ios:440d06bdac7a3ceb1c9a75</string>
 </dict>
 </plist>

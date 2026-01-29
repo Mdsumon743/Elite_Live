@@ -422,7 +422,7 @@ class LiveContentSection extends StatelessWidget {
                             const SizedBox(height: 8),
                             GestureDetector(
                               onTap: (){
-                                DonationSheet().show(context);
+                                DonationSheet.show(context, eventId: '');
                               },
 
                               child: Icon(

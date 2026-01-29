@@ -3,13 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+
+
 class CustomTextField extends StatelessWidget {
   final String? hintText;
   final bool isReadonly;
   final int maxLines;
   final TextInputType keyboardType;
+  final TextInputAction? textInputAction; // <-- added
   final TextEditingController? controller;
   final String? Function(String?)? validator;
+  final Function(String)? onSubmitted;
+  final Function(String)? onChanged;
 
   const CustomTextField({
     super.key,
@@ -19,6 +24,9 @@ class CustomTextField extends StatelessWidget {
     this.isReadonly = false,
     this.maxLines = 1,
     this.keyboardType = TextInputType.text,
+    this.textInputAction,   // <-- added
+    this.onSubmitted,
+    this.onChanged,
   });
 
   @override
@@ -28,7 +36,9 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,   // <-- added
       readOnly: isReadonly,
+      onFieldSubmitted: onSubmitted,
       decoration: InputDecoration(
         filled: true,
         fillColor: const Color(0xFFF9F9FB),
@@ -44,6 +54,17 @@ class CustomTextField extends StatelessWidget {
           fontWeight: FontWeight.w400,
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+        suffixIcon: controller != null && controller!.text.isNotEmpty
+            ? IconButton(
+          icon: Icon(Icons.clear, size: 20.sp),
+          onPressed: () {
+            controller!.clear();
+            if (onSubmitted != null) {
+              onSubmitted!('');
+            }
+          },
+        )
+            : SizedBox.shrink(),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: const BorderSide(color: Color(0xFFEDEEF4), width: 1),
@@ -73,3 +94,7 @@ class CustomTextField extends StatelessWidget {
     );
   }
 }
+
+
+
+

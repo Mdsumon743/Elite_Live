@@ -9,7 +9,11 @@ import '../../../../core/utils/constants/image_path.dart';
 class TopInfluenceSection extends StatelessWidget {
   const TopInfluenceSection({
     super.key,
+    required this.watchCount,
+    required this.eventName,
   });
+  final String watchCount;
+  final String eventName;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +122,7 @@ class TopInfluenceSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CustomTextView(
-                       text:   "Tell me what excites...",
+                       text:   eventName,
                   fontWeight: FontWeight.w500,
                   fontSize: 13.sp,
                   color: AppColors.textHeader,
@@ -127,7 +131,7 @@ class TopInfluenceSection extends StatelessWidget {
                 ),
                 SizedBox(height: 4.h),
                 CustomTextView(
-                     text:     "50k Watching",
+                     text:    watchCount,
                   fontSize: 11.sp,
                   fontWeight: FontWeight.w400,
                   color: AppColors.textBody,

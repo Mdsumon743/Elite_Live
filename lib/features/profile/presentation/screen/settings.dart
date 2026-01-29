@@ -318,7 +318,7 @@ class SettingsPage extends StatelessWidget {
                         onTap: (){Get.toNamed(AppRoute.changePass);},
                       ),
 
-                      settingTile(
+                     /* settingTile(
                         'assets/icons/bank.png',
                         'Bank Information',
                         showArrow: true,
@@ -326,7 +326,7 @@ class SettingsPage extends StatelessWidget {
                         textColor: Color(0xFF191919), // text color
                          onTap: (){Get.toNamed(AppRoute.bank);},
                       ),
-
+*/
                       settingTile(
                         'assets/icons/subscription.png',
                         'Delete Account',

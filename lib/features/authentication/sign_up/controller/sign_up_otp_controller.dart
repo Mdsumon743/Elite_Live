@@ -1,6 +1,7 @@
 
 import 'dart:developer';
 
+import 'package:elites_live/core/global_widget/custom_snackbar.dart';
 import 'package:elites_live/core/services/auth_service.dart';
 import 'package:elites_live/routes/app_routing.dart';
 import 'package:flutter/material.dart';
@@ -58,13 +59,8 @@ class SignUpOtpController extends GetxController {
         Get.offAllNamed(AppRoute.signIn);
 
       } else {
-        Get.snackbar(
-          "Error",
-          response.errorMessage,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomSnackBar.error(title: "Error", message: response.errorMessage);
+
       }
     } catch (e) {
       debugPrint("Error: $e");
@@ -88,20 +84,11 @@ class SignUpOtpController extends GetxController {
       final response = await NetworkCaller().postRequest(url, body: signUpData);
       if (response.isSuccess) {
         otpController.text = "";
-        Get.snackbar(
-          "Success",
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          "Resend Code successfully",
-        );
+        CustomSnackBar.success(title: "Success", message: "Resend Code successfully");
+
       } else {
-        Get.snackbar(
-          "Error",
-          response.errorMessage,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
+        CustomSnackBar.error(title: "Error", message: response.errorMessage);
+
       }
     } catch (e) {
       debugPrint("Error: $e");

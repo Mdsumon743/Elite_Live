@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -5,15 +7,18 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/global_widget/custom_elevated_button.dart';
 import '../../../../core/utils/constants/app_colors.dart';
 import '../../../main_view/presentation/screen/main_view_screen.dart';
+import '../../controller/profile_controller.dart';
 import '../../controller/wallet_controller.dart';
 import '../widget/transaction_widgets.dart';
 import '../widget/wallet_widgets.dart';
 
 class WalletPage extends StatelessWidget {
-  const WalletPage({super.key});
+   WalletPage({super.key});
+  final ProfileController profileController = Get.find();
 
   @override
   Widget build(BuildContext context) {
+    log("the stripe id is ${profileController.userinfo.value!.stripeAccountId}");
     final controller = Get.put(WalletController());
 
     return Scaffold(
@@ -70,7 +75,14 @@ class WalletPage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 🟣 Wallet Header Card
-                      WalletHeaderCard(controller: controller),
+                      WalletHeaderCard(
+                        controller: controller,
+                        stripeAccountId: profileController.userinfo.value?.stripeAccountId,
+                        onTap: () {
+                          controller.connectedAccountSetUp();
+                        },
+                      ),
+
                       SizedBox(height: 24.h),
 
                       // 🧾 Transaction History Section

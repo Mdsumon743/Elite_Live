@@ -146,7 +146,7 @@ class SignUpScreen extends StatelessWidget {
                 SizedBox(height: 5.h),
                 CustomPasswordField(
                   hints: "Enter Confirm Password",
-                  controller: controller.passwordController,
+                  controller: controller.confirmPassword,
                   validator: validatePassword,
                 ),
                 SizedBox(height: 30.h),

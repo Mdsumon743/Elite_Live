@@ -14,7 +14,8 @@ class GroupSection extends StatelessWidget {
     required this.groupMember,
     required this.groupImage,
     required this.buttonText,
-    required this.groupStaus
+    required this.groupStaus,
+    this.onTap,
   });
 
   final String groupName;
@@ -22,6 +23,7 @@ class GroupSection extends StatelessWidget {
   final String groupImage;
   final String buttonText;
   final bool groupStaus;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +69,8 @@ class GroupSection extends StatelessWidget {
 
           // Invite Button
           GradientButton(isGroup: groupStaus,title: buttonText, onTap: (){
-            Get.toNamed(AppRoute.invite);
+            onTap!();
+            ///Get.toNamed(AppRoute.invite);
           },),
         ],
       ),

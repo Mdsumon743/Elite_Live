@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import '../../event/presentation/screen/event_screen.dart';
 import '../../home/presentation/screen/home_screen.dart';
 import '../../profile/presentation/screen/profile.dart';
-import '../../search/presentation/screens/search.dart';
+import '../../search/presentation/screen/search.dart';
+
 
 class MainViewController extends GetxController {
   var currentIndex = 0.obs;

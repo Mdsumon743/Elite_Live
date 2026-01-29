@@ -1,28 +1,47 @@
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
 
+import 'package:get/get.dart';
+import 'package:video_player/video_player.dart';
+
 class VideoController extends GetxController {
   late VideoPlayerController videoPlayerController;
+
+  final String videoUrl;
+
   var isPlaying = false.obs;
   var isMuted = false.obs;
   var position = Duration.zero.obs;
   var duration = Duration.zero.obs;
+  var hasError = false.obs;
+
+  VideoController(this.videoUrl);
 
   @override
   void onInit() {
     super.onInit();
+
     videoPlayerController = VideoPlayerController.networkUrl(
-      Uri.parse('https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4'),
-    )
-      ..initialize().then((_) {
-        duration.value = videoPlayerController.value.duration;
-        update();
-      });
+      Uri.parse(videoUrl),
+    )..initialize().then((_) {
+      duration.value = videoPlayerController.value.duration;
+      hasError.value = false;
+      update();
+      // videoPlayerController.play(); // ✅ Remove auto-play for better control
+    }).catchError((error) {
+      print('Video load error: $error');
+      hasError.value = true;
+      update();
+    });
 
     videoPlayerController.addListener(() {
       position.value = videoPlayerController.value.position;
       duration.value = videoPlayerController.value.duration;
       isPlaying.value = videoPlayerController.value.isPlaying;
+
+      if (videoPlayerController.value.hasError) {
+        hasError.value = true;
+      }
     });
   }
 
@@ -45,3 +64,4 @@ class VideoController extends GetxController {
     super.onClose();
   }
 }
+

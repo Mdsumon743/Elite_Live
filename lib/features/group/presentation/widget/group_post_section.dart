@@ -15,16 +15,20 @@ import '../../../home/presentation/widget/share_sheet.dart';
 
 
 class GroupPostSection extends StatelessWidget {
-  const GroupPostSection({
+  const  GroupPostSection({
     super.key,
     required this.replyingToId,
     required this.replyingToName,
     required this.controller,
+    this.onTap,
   });
 
   final RxString replyingToId;
   final RxString replyingToName;
   final HomeController controller;
+  final VoidCallback? onTap;
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +164,11 @@ class GroupPostSection extends StatelessWidget {
             },
           )),
           SizedBox(height: 10.h),
-          CommentInputBox(),
+          CommentInputBox(
+            onTap: (){
+             onTap!();
+            },
+          ),
         ],
       ),
     );
@@ -176,6 +184,7 @@ Widget _buildCommentTile(
     ) {
   return GestureDetector(
     onTap: () {
+
       replyingToId.value = comment.id;
       replyingToName.value = comment.userName;
     },
